@@ -1,0 +1,70 @@
+### Variables
+@baseUrl = http://localhost:5230/api
+@token = YOUR_JWT_TOKEN_HERE
+@adminToken = YOUR_ADMIN_JWT_TOKEN_HERE
+
+### 1. Basic Search - Find posts by keyword
+GET {{baseUrl}}/search?q=test
+Content-Type: application/json
+
+### 2. Search with Pagination
+GET {{baseUrl}}/search?q=string&page=1&pageSize=2
+Content-Type: application/json
+
+### 3. Case-Insensitive Search
+GET {{baseUrl}}/search?q=HELLO
+Content-Type: application/json
+
+### 4. Search by Category
+# First get category ID from /api/categories
+# Replace CATEGORY_ID_HERE with actual category ID
+GET {{baseUrl}}/search?q=post&categoryId=CATEGORY_ID_HERE
+Content-Type: application/json
+
+### 5. Search Categories
+GET {{baseUrl}}/search/categories?q=tech
+Content-Type: application/json
+
+### 6. Admin Advanced Search - Include Unpublished Posts
+GET {{baseUrl}}/search/admin?q=test&includeUnpublished=true
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+### 7. Validation Error - Query Too Short
+GET {{baseUrl}}/search?q=ab
+Content-Type: application/json
+
+### 8. Validation Error - Empty Query
+GET {{baseUrl}}/search?q=
+Content-Type: application/json
+
+### 9. No Results Found
+GET {{baseUrl}}/search?q=nonexistentquery123
+Content-Type: application/json
+
+### 10. Multiple Page Navigation
+# Page 1
+GET {{baseUrl}}/search?q=string&page=1&pageSize=2
+Content-Type: application/json
+
+###
+# Page 2
+GET {{baseUrl}}/search?q=string&page=2&pageSize=2
+Content-Type: application/json
+
+### 11. Search in Content (not just title)
+GET {{baseUrl}}/search?q=comments
+Content-Type: application/json
+
+### 12. Get All Categories for Filter
+GET {{baseUrl}}/categories
+Content-Type: application/json
+
+### Notes:
+# - Minimum query length: 3 characters
+# - Default page size: 20
+# - Content is truncated to 200 characters in preview
+# - Public search only shows published posts
+# - Admin search can include unpublished posts with includeUnpublished=true
+# - Search is case-insensitive
+# - Searches in both Title and Content fields

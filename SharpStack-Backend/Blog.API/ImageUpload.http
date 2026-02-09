@@ -1,0 +1,130 @@
+### Variables
+@baseUrl = http://localhost:5230/api
+@token = YOUR_JWT_TOKEN_HERE
+@postId = YOUR_POST_ID_HERE
+@imageId = YOUR_IMAGE_ID_HERE
+
+### 1. Login to get token
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@blog.com",
+  "password": "Admin@123"
+}
+
+### 2. Get all posts to find a post ID
+GET {{baseUrl}}/posts
+Authorization: Bearer {{token}}
+
+### 3. Upload single image to post
+POST {{baseUrl}}/posts/{{postId}}/images
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="test-image.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/test-image.jpg
+------WebKitFormBoundary--
+
+### 4. Upload multiple images (max 3 per post)
+POST {{baseUrl}}/posts/{{postId}}/images
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="image1.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/image1.jpg
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="image2.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/image2.jpg
+------WebKitFormBoundary--
+
+### 5. Get all images for a post (Public - No auth required)
+GET {{baseUrl}}/posts/{{postId}}/images
+
+### 6. Try to upload more than 3 images (Should fail)
+# First upload 3 images, then try to upload 1 more
+POST {{baseUrl}}/posts/{{postId}}/images
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="extra-image.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/extra-image.jpg
+------WebKitFormBoundary--
+
+### 7. Try to upload invalid file format (Should fail)
+POST {{baseUrl}}/posts/{{postId}}/images
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="document.pdf"
+Content-Type: application/pdf
+
+< ./test-files/document.pdf
+------WebKitFormBoundary--
+
+### 8. Try to upload without authentication (Should fail)
+POST {{baseUrl}}/posts/{{postId}}/images
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="test-image.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/test-image.jpg
+------WebKitFormBoundary--
+
+### 9. Delete an image
+DELETE {{baseUrl}}/posts/{{postId}}/images/{{imageId}}
+Authorization: Bearer {{token}}
+
+### 10. Try to delete non-existent image (Should fail)
+DELETE {{baseUrl}}/posts/{{postId}}/images/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+### 11. Upload to non-existent post (Should fail)
+POST {{baseUrl}}/posts/00000000-0000-0000-0000-000000000000/images
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="test-image.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/test-image.jpg
+------WebKitFormBoundary--
+
+### Notes:
+# - Max 3 images per post
+# - Max 5 MB per image
+# - Allowed formats: JPG, JPEG, PNG only
+# - First image uploaded becomes the featured image automatically
+# - Images are stored in wwwroot/uploads/posts/{postId}/
+# - Physical files are deleted when image is removed
+# - All images cascade delete when post is deleted
+# - Public can view images, only authenticated users can upload/delete
+# - Images accessible at: http://localhost:5230/uploads/posts/{postId}/{imageGuid}.jpg
+
+### For testing with curl:
+# Upload image:
+# curl -X POST "http://localhost:5230/api/posts/{postId}/images" \
+#   -H "Authorization: Bearer YOUR_TOKEN" \
+#   -F "files=@/path/to/image.jpg"
+#
+# Get images:
+# curl "http://localhost:5230/api/posts/{postId}/images"
+#
+# Delete image:
+# curl -X DELETE "http://localhost:5230/api/posts/{postId}/images/{imageId}" \
+#   -H "Authorization: Bearer YOUR_TOKEN"

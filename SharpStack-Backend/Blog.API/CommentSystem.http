@@ -1,0 +1,131 @@
+### Comment System API Tests
+@baseUrl = http://localhost:5230/api
+@token = YOUR_JWT_TOKEN_HERE
+@postId = YOUR_POST_ID_HERE
+@commentId = YOUR_COMMENT_ID_HERE
+
+### 1. Register a new user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "Test@123"
+}
+
+### 2. Login and get token
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "Test@123"
+}
+
+### 3. Create a category (Optional - if needed)
+POST {{baseUrl}}/categories
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Technology",
+  "slug": "technology",
+  "isActive": true
+}
+
+### 4. Create a post (Optional - if needed)
+POST {{baseUrl}}/posts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "My First Blog Post",
+  "content": "This is the content of my first blog post.",
+  "categoryId": "YOUR_CATEGORY_ID",
+  "isPublished": false
+}
+
+### 5. Publish a post (Required before commenting)
+PUT {{baseUrl}}/posts/{{postId}}/publish
+Authorization: Bearer {{token}}
+
+### 6. Get all comments for a post (Public - No Auth Required)
+GET {{baseUrl}}/posts/{{postId}}/comments?page=1&pageSize=10
+
+### 7. Create a comment (Requires Authentication)
+POST {{baseUrl}}/posts/{{postId}}/comments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "This is my first comment on this post!"
+}
+
+### 8. Create another comment
+POST {{baseUrl}}/posts/{{postId}}/comments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "Great article! Very informative and well-written."
+}
+
+### 9. Update a comment (Only comment owner can edit)
+PUT {{baseUrl}}/posts/{{postId}}/comments/{{commentId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "Updated comment: This is my edited comment!"
+}
+
+### 10. Delete a comment (Owner or Admin)
+DELETE {{baseUrl}}/posts/{{postId}}/comments/{{commentId}}
+Authorization: Bearer {{token}}
+
+### 11. Get comments with pagination - Page 2
+GET {{baseUrl}}/posts/{{postId}}/comments?page=2&pageSize=5
+
+### 12. Test validation - Empty content (should fail)
+POST {{baseUrl}}/posts/{{postId}}/comments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": ""
+}
+
+### 13. Test validation - Content too long (should fail - over 1000 chars)
+POST {{baseUrl}}/posts/{{postId}}/comments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+}
+
+### 14. Try to comment on unpublished post (should fail)
+POST {{baseUrl}}/posts/UNPUBLISHED_POST_ID/comments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "Trying to comment on unpublished post"
+}
+
+### 15. Try to create comment without authentication (should fail)
+POST {{baseUrl}}/posts/{{postId}}/comments
+Content-Type: application/json
+
+{
+  "content": "This should fail without auth"
+}
+
+### 16. Try to edit someone else's comment (should fail)
+PUT {{baseUrl}}/posts/{{postId}}/comments/{{commentId}}
+Content-Type: application/json
+Authorization: Bearer ANOTHER_USER_TOKEN
+
+{
+  "content": "Trying to edit someone else's comment"
+}
