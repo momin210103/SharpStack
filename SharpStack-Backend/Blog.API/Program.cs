@@ -106,13 +106,13 @@ app.Lifetime.ApplicationStarted.Register(() =>
     Log.Information("Listening on: {Urls}", urls);
 });
 
-// Seed Roles and Admin User
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    await RoleSeeder.SeedRolesAsync(roleManager);
+// // Seed Roles and Admin User
+// using (var scope = app.Services.CreateScope())
+// {
+//     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+//     await RoleSeeder.SeedRolesAsync(roleManager);
 
-}
+// }
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())

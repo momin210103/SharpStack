@@ -9,7 +9,9 @@ build/
 .env.example
 bin/
 obj/
-*.appsettings.json
+**/appsettings.json
+**/appsettings.Development.json
+**/appsettings.Production.json
 
 
 
