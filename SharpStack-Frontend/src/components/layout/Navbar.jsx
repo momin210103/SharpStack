@@ -30,7 +30,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-12 h-16 bg-primary-700 rounded-lg flex items-center justify-center">
               {/* <span className="text-white font-bold text-xl">SS</span> */}
-              <img src="/public/logo.png" alt="Logo" className="h-16 w-12"/>
+              <img src="/logo.png" alt="Logo" className="h-16 w-12"/>
             </div>
             <span className="text-2xl font-bold text-gray-900">SharpStack</span>
             
