@@ -107,12 +107,16 @@ app.Lifetime.ApplicationStarted.Register(() =>
 });
 
 // // Seed Roles and Admin User
-// using (var scope = app.Services.CreateScope())
-// {
-//     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-//     await RoleSeeder.SeedRolesAsync(roleManager);
-
-// }
+try
+{
+    using var scope = app.Services.CreateScope();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    await RoleSeeder.SeedRolesAsync(roleManager);
+}
+catch (Exception ex)
+{
+    Log.Error(ex, "Role seeding failed");
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
