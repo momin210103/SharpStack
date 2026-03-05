@@ -2,7 +2,7 @@ import axiosInstance from "./axios";
 
 const authService = {
   register: async (email, password) => {
-    const response = await axiosInstance.post("/auth/register", {
+    const response = await axiosInstance.post("/Auth/register", {
       email,
       password,
     });
@@ -10,7 +10,7 @@ const authService = {
   },
 
   login: async (email, password) => {
-    const response = await axiosInstance.post("/auth/login", {
+    const response = await axiosInstance.post("/Auth/login", {
       email,
       password,
     });
