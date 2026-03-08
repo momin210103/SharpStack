@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FiHome, FiFileText, FiTag, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
+import { FiHome, FiFileText, FiTag, FiLogOut, FiMenu, FiX, FiImage } from 'react-icons/fi';
 import { useState } from 'react';
 
 const AdminLayout = () => {
@@ -17,6 +17,7 @@ const AdminLayout = () => {
     { path: '/admin', icon: FiHome, label: 'Dashboard' },
     { path: '/admin/posts', icon: FiFileText, label: 'Posts' },
     { path: '/admin/categories', icon: FiTag, label: 'Categories' },
+    { path: '/', icon: FiHome, label: 'View Site' },
   ];
 
   return (

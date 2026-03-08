@@ -16,6 +16,7 @@ import PostDetail from './pages/public/PostDetail';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import PostManagement from './pages/admin/PostManagement';
 import PostForm from './pages/admin/PostForm';
+import ManageCategory from './pages/admin/ManageCategory';
 
 function App() {
   return (
@@ -80,11 +81,13 @@ function App() {
                 <AdminLayout />
               </ProtectedRoute>
             }
+
           >
             <Route index element={<AdminDashboard />} />
             <Route path="posts" element={<PostManagement />} />
             <Route path="posts/create" element={<PostForm />} />
             <Route path="posts/edit/:id" element={<PostForm />} />
+            <Route path="categories" element={<ManageCategory />} />
           </Route>
 
           {/* Catch all */}
