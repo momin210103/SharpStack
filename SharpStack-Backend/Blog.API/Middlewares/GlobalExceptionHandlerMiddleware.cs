@@ -92,21 +92,21 @@ namespace Blog.API.Middlewares
                     _logger.LogError(dbUpdateException, "Database error occurred");
                     break;
 
-                case Microsoft.Data.SqlClient.SqlException sqlException:
+                case Npgsql.PostgresException postgresException:
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     errorResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
                     
                     if (_environment.IsDevelopment())
                     {
-                        errorResponse.Message = $"SQL error: {sqlException.Message}";
-                        errorResponse.StackTrace = sqlException.StackTrace;
+                        errorResponse.Message = $"SQL error: {postgresException.Message}";
+                        errorResponse.StackTrace = postgresException.StackTrace;
                     }
                     else
                     {
                         errorResponse.Message = "A database connection error occurred. Please try again later.";
                     }
                     
-                    _logger.LogError(sqlException, "SQL error occurred");
+                    _logger.LogError(postgresException, "SQL error occurred");
                     break;
 
                 default:
