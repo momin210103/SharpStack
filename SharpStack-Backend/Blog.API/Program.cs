@@ -4,6 +4,7 @@ using Blog.Infrastructure.Identity;
 using Blog.Infrastructure.Persistence;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Blog.Application.Interfaces.Repositories;
 using Blog.Infrastructure.Repositories;
@@ -20,20 +21,31 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Add CORS
+// Add CORS — origins now come from configuration, not hardcoded
+var allowedOrigins = builder.Configuration
+    .GetSection("AllowedOrigins")
+    .Get<string[]>() ?? new[] { "http://localhost:5173" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://sharpstackbd.onrender.com", "http://localhost:5173")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
     });
 });
 
+// Forwarded Headers — required behind Render/Railway's reverse proxy
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -60,14 +72,14 @@ builder.Services.AddSwaggerGen(options =>
     };
 
     options.AddSecurityDefinition("Bearer", jwtSecurityScheme);
-    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
             },
@@ -75,11 +87,11 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sql => sql.EnableRetryOnFailure()));
-
 
 // Identity Services & Jwt
 builder.Services.AddIdentityServices();
@@ -106,11 +118,25 @@ app.Lifetime.ApplicationStarted.Register(() =>
     Log.Information("Listening on: {Urls}", urls);
 });
 
-// // Seed Roles and Admin User
+// Apply migrations safely — log and continue if it fails, don't crash silently without trace
 try
 {
-    using var scope = app.Services.CreateScope();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    using var migrationScope = app.Services.CreateScope();
+    var db = migrationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+    Log.Information("Database migration applied successfully");
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Database migration failed. Application cannot start safely.");
+    throw; // fail fast — a backend without a correct schema shouldn't serve traffic
+}
+
+// Seed Roles and Admin User
+try
+{
+    using var seedScope = app.Services.CreateScope();
+    var roleManager = seedScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     await RoleSeeder.SeedRolesAsync(roleManager);
 }
 catch (Exception ex)
@@ -118,14 +144,21 @@ catch (Exception ex)
     Log.Error(ex, "Role seeding failed");
 }
 
+// Forwarded headers must be applied early in the pipeline
+app.UseForwardedHeaders();
+
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API v1");
     });
+}
+else
+{
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
@@ -143,17 +176,16 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapFallbackToFile("index.html");
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
-}
+
+// Simple health check endpoint — useful for uptime monitoring / Render health checks
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 
 try
 {
-    Log.Information("Starting Blog API");
-    app.Run("http://0.0.0.0:8080");
+    Log.Information("Starting Blog API on port {Port}", port);
+    app.Run($"http://0.0.0.0:{port}");
 }
 catch (Exception ex)
 {
@@ -163,4 +195,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
