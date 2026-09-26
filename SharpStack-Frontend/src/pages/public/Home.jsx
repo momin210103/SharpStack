@@ -65,10 +65,10 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] transition-colors">
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] transition-colors overflow-x-hidden">
       {/* SECTION 1 — HERO */}
       <section className="border-b border-[var(--color-border)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             {/* Left Column: Text & Content */}
             <div className="lg:col-span-7">
@@ -83,7 +83,7 @@ const Home = () => {
               </h1>
 
               {/* Supporting text */}
-              <p className="font-serif text-lg sm:text-xl text-[var(--color-text-muted)] leading-relaxed max-w-2xl mb-8">
+              <p className="font-serif text-lg sm:text-xl text-[var(--color-text-muted)] leading-relaxed max-w-2xl lg:max-w-3xl mb-8">
                 Practical knowledge, real-world solutions, and engineering insights for modern developers.
               </p>
 
@@ -113,7 +113,7 @@ const Home = () => {
 
             {/* Right Column: Visual Developer Terminal */}
             <div className="lg:col-span-5">
-              <div className="w-full max-w-lg mx-auto lg:max-w-none">
+              <div className="w-full max-w-xl mx-auto lg:max-w-none">
                 <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[6px] shadow-2xl overflow-hidden font-mono text-xs select-none">
                   {/* Terminal Header */}
                   <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-surface-secondary)]/50">
@@ -169,7 +169,7 @@ const Home = () => {
           className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/30 backdrop-blur-xs sticky top-16 z-20"
           aria-label="Filter by Topic"
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+          <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
               <button
                 onClick={() => {
@@ -206,7 +206,7 @@ const Home = () => {
       )}
 
       {/* SECTION 2 — LATEST ARTICLES */}
-      <section id="articles" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+      <section id="articles" className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 mb-10 pb-4 border-b border-[var(--color-border)]">
           <div>
