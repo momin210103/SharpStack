@@ -7,7 +7,20 @@ export default {
   theme: {
     extend: {
       colors: {
+        bg: 'var(--color-bg)',
+        surface: 'var(--color-surface)',
+        'surface-secondary': 'var(--color-surface-secondary)',
+        'text-main': 'var(--color-text)',
+        'text-muted': 'var(--color-text-muted)',
+        border: 'var(--color-border)',
+        violet: {
+          DEFAULT: 'var(--color-primary)',
+          dim: 'var(--color-primary-muted)',
+        },
+        success: 'var(--color-success)',
         primary: {
+          DEFAULT: 'var(--color-primary)',
+          muted: 'var(--color-primary-muted)',
           50: '#f0f9ff',
           100: '#e0f2fe',
           200: '#bae6fd',
@@ -21,6 +34,8 @@ export default {
         },
       },
       fontFamily: {
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+        serif: ['"Source Serif 4"', 'Georgia', 'Cambria', 'serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
     },

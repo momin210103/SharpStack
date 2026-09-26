@@ -6,10 +6,11 @@ import {
   FiX,
   FiUser,
   FiLogOut,
-  FiHome,
-  FiTag,
   FiShield,
+  FiTag,
   FiChevronDown,
+  FiSun,
+  FiMoon,
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
@@ -17,13 +18,26 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const userDropdownRef = useRef(null);
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sharpstack-theme') || 'dark';
+    }
+    return 'dark';
+  });
 
+  const userDropdownRef = useRef(null);
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Close menus when route changes (adjust state during render per React 19 guidelines)
+  // Initialize theme on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('sharpstack-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    setCurrentTheme(saved);
+  }, []);
+
+  // Close menus when route changes
   const [prevPathname, setPrevPathname] = useState(location.pathname);
   if (prevPathname !== location.pathname) {
     setPrevPathname(location.pathname);
@@ -58,6 +72,14 @@ const Navbar = () => {
     };
   }, []);
 
+  // Theme toggle helper
+  const toggleTheme = () => {
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setCurrentTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('sharpstack-theme', nextTheme);
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -82,56 +104,62 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs transition-colors">
+    <header className="sticky top-0 z-50 bg-[var(--color-bg)]/95 backdrop-blur-md border-b border-[var(--color-border)] text-[var(--color-text)] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          {/* Brand & Left Navigation */}
-          <div className="flex items-center gap-8">
+        <div className="flex items-center justify-between h-16 gap-4 sm:gap-6">
+          {/* LEFT: BRAND */}
+          <div className="flex items-center gap-6 lg:gap-8">
             <Link
               to="/"
-              className="flex items-center gap-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 group"
+              className="flex items-center gap-1.5 font-mono font-bold text-lg sm:text-xl tracking-tight text-[var(--color-text)] group focus:outline-none select-none"
             >
-              <div className="w-9 h-9 bg-primary-700 rounded-lg flex items-center justify-center p-1 shadow-xs group-hover:bg-primary-800 transition-colors flex-shrink-0">
-                <img
-                  src="/logo.png"
-                  alt="SharpStack Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-gray-900 group-hover:text-primary-600 transition-colors">
+              <span className="text-[var(--color-primary)] text-2xl font-black transition-transform group-hover:scale-110">
+                #
+              </span>
+              <span className="font-bold tracking-tight group-hover:text-[var(--color-primary)] transition-colors">
                 SharpStack
               </span>
             </Link>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex items-center space-x-1" aria-label="Main Navigation">
+            {/* DESKTOP NAVIGATION LINKS */}
+            <nav className="hidden md:flex items-center gap-1 lg:gap-2 font-mono text-xs" aria-label="Main Navigation">
               <Link
                 to="/"
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-3 py-1.5 rounded-[3px] transition-colors ${
                   isActive('/')
-                    ? 'text-primary-600 bg-primary-50 font-semibold'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/70'
+                    ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-semibold'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-surface)]'
                 }`}
               >
-                Home
+                Articles
               </Link>
               <Link
                 to="/categories"
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-3 py-1.5 rounded-[3px] transition-colors ${
                   isActive('/categories')
-                    ? 'text-primary-600 bg-primary-50 font-semibold'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/70'
+                    ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-semibold'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-surface)]'
                 }`}
               >
-                Categories
+                Topics
+              </Link>
+              <Link
+                to="/about"
+                className={`px-3 py-1.5 rounded-[3px] transition-colors ${
+                  isActive('/about')
+                    ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-semibold'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-surface)]'
+                }`}
+              >
+                About
               </Link>
               {user && isAdmin() && (
                 <Link
                   to="/admin"
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  className={`px-3 py-1.5 rounded-[3px] transition-colors ${
                     isActive('/admin')
-                      ? 'text-primary-600 bg-primary-50 font-semibold'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/70'
+                      ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-semibold'
+                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-surface)]'
                   }`}
                 >
                   Dashboard
@@ -140,63 +168,66 @@ const Navbar = () => {
             </nav>
           </div>
 
-          {/* Search Bar - Desktop */}
-          <form
-            onSubmit={handleSearch}
-            className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-2"
-            role="search"
-          >
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <FiSearch size={16} />
-              </div>
+          {/* CENTER & RIGHT CONTROLS */}
+          <div className="hidden md:flex items-center gap-3 lg:gap-4 flex-1 justify-end max-w-xl">
+            {/* SEARCH FIELD */}
+            <form
+              onSubmit={handleSearch}
+              className="relative flex items-center w-48 lg:w-64"
+              role="search"
+            >
+              <FiSearch
+                size={13}
+                className="absolute left-2.5 text-[var(--color-text-muted)] pointer-events-none"
+              />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search posts..."
-                className="w-full pl-9 pr-8 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
+                className="w-full h-8 pl-8 pr-7 text-xs font-mono bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[3px] text-[var(--color-text)] placeholder-[var(--color-text-muted)]/70 focus:outline-none focus:border-[var(--color-primary)] transition-all"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
-                  aria-label="Clear search query"
+                  className="absolute right-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] focus:outline-none"
+                  aria-label="Clear search"
                 >
-                  <FiX size={14} />
+                  <FiX size={12} />
                 </button>
               )}
-            </div>
-          </form>
+            </form>
 
-          {/* Right Area: User/Auth Actions & Mobile Toggle */}
-          <div className="flex items-center gap-3">
-            {/* Desktop Auth Section */}
-            <div className="hidden md:flex items-center">
+            {/* THEME TOGGLE BUTTON */}
+            <button
+              onClick={toggleTheme}
+              aria-label={`Switch to ${currentTheme === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Switch to ${currentTheme === 'dark' ? 'light' : 'dark'} mode`}
+              className="h-8 w-8 flex items-center justify-center rounded-[3px] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-primary-muted)] transition-colors focus:outline-none shrink-0"
+            >
+              {currentTheme === 'dark' ? <FiSun size={13} /> : <FiMoon size={13} />}
+            </button>
+
+            {/* USER MENU / AUTH ACTIONS */}
+            <div className="flex items-center shrink-0">
               {user ? (
-                /* Authenticated User Menu */
+                /* Authenticated User Menu: ● User ▼ */
                 <div className="relative" ref={userDropdownRef}>
                   <button
                     onClick={() => setIsUserDropdownOpen((prev) => !prev)}
-                    className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-all text-left"
+                    className="flex items-center gap-2 h-8 px-2.5 rounded-[3px] border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary-muted)] focus:outline-none transition-colors text-left font-mono text-xs"
                     aria-expanded={isUserDropdownOpen}
                     aria-haspopup="true"
                     aria-label="User account menu"
                   >
-                    <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-xs shadow-xs flex-shrink-0">
-                      {user.email ? (
-                        user.email.charAt(0).toUpperCase()
-                      ) : (
-                        <FiUser size={14} />
-                      )}
-                    </div>
-                    <span className="text-sm font-medium text-gray-700 max-w-[120px] lg:max-w-[160px] truncate hidden sm:inline">
+                    <span className="w-2 h-2 rounded-full bg-[var(--color-success)] shrink-0" />
+                    <span className="font-mono text-xs text-[var(--color-text)] max-w-[120px] lg:max-w-[150px] truncate">
                       {user.email}
                     </span>
                     <FiChevronDown
-                      size={14}
-                      className={`text-gray-400 transition-transform duration-200 ${
+                      size={12}
+                      className={`text-[var(--color-text-muted)] transition-transform duration-200 ${
                         isUserDropdownOpen ? 'rotate-180' : ''
                       }`}
                     />
@@ -204,55 +235,57 @@ const Navbar = () => {
 
                   {/* Dropdown Menu */}
                   {isUserDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white border border-gray-100 shadow-lg ring-1 ring-black/5 divide-y divide-gray-100 py-1 z-50 origin-top-right transition-all">
-                      <div className="px-4 py-2.5">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <div className="absolute right-0 mt-1.5 w-56 rounded-[3px] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xl divide-y divide-[var(--color-border)] py-1 z-50 origin-top-right transition-all font-mono">
+                      <div className="px-3.5 py-2.5">
+                        <p className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]">
                           Signed in as
                         </p>
                         <p
-                          className="text-sm font-medium text-gray-900 truncate mt-0.5"
+                          className="text-xs font-semibold text-[var(--color-text)] truncate mt-0.5"
                           title={user.email}
                         >
                           {user.email}
                         </p>
-                        {isAdmin() ? (
-                          <span className="inline-flex items-center px-2 py-0.5 mt-1.5 rounded text-[11px] font-medium bg-primary-50 text-primary-700 border border-primary-100">
-                            Administrator
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 mt-1.5 rounded text-[11px] font-medium bg-gray-100 text-gray-600">
-                            Member
-                          </span>
-                        )}
+                        <div className="mt-1.5">
+                          {isAdmin() ? (
+                            <span className="inline-block text-[10px] font-semibold text-[var(--color-primary)] bg-[var(--color-primary-muted)]/20 px-1.5 py-0.5 rounded-[2px] border border-[var(--color-primary-muted)]/40">
+                              ADMINISTRATOR
+                            </span>
+                          ) : (
+                            <span className="inline-block text-[10px] font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] px-1.5 py-0.5 rounded-[2px]">
+                              MEMBER
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="py-1">
+                      <div className="py-1 text-xs">
                         {isAdmin() && (
                           <Link
                             to="/admin"
                             onClick={() => setIsUserDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors"
+                            className="flex items-center gap-2 px-3.5 py-1.5 text-[var(--color-text)] hover:text-[var(--color-primary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                           >
-                            <FiShield size={15} className="text-gray-400" />
+                            <FiShield size={13} className="text-[var(--color-text-muted)]" />
                             <span>Admin Dashboard</span>
                           </Link>
                         )}
                         <Link
                           to="/categories"
                           onClick={() => setIsUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors"
+                          className="flex items-center gap-2 px-3.5 py-1.5 text-[var(--color-text)] hover:text-[var(--color-primary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                         >
-                          <FiTag size={15} className="text-gray-400" />
-                          <span>Browse Categories</span>
+                          <FiTag size={13} className="text-[var(--color-text-muted)]" />
+                          <span>Browse Topics</span>
                         </Link>
                       </div>
 
-                      <div className="py-1">
+                      <div className="py-1 text-xs">
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                          className="w-full flex items-center gap-2 px-3.5 py-1.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-colors text-left"
                         >
-                          <FiLogOut size={15} className="text-red-500" />
+                          <FiLogOut size={13} />
                           <span>Sign out</span>
                         </button>
                       </div>
@@ -260,56 +293,66 @@ const Navbar = () => {
                   )}
                 </div>
               ) : (
-                /* Guest Links */
-                <div className="flex items-center space-x-2">
+                /* Guest Auth Links */
+                <div className="flex items-center gap-2 font-mono text-xs">
                   <Link
                     to="/login"
-                    className="px-3.5 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/70 rounded-lg transition-colors"
+                    className="px-3 py-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
                   >
                     Log in
                   </Link>
                   <Link
                     to="/register"
-                    className="inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-xs hover:shadow transition-all duration-150 active:scale-[0.98]"
+                    className="px-3.5 py-1.5 bg-[var(--color-primary)] hover:bg-[#7A4BC9] text-white font-medium rounded-[3px] transition-colors shadow-xs"
                   >
                     Sign up
                   </Link>
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Mobile Menu Button */}
+          {/* MOBILE CONTROLS */}
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              onClick={toggleTheme}
+              aria-label={`Switch to ${currentTheme === 'dark' ? 'light' : 'dark'} mode`}
+              className="p-2 rounded-[3px] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors focus:outline-none"
+            >
+              {currentTheme === 'dark' ? <FiSun size={14} /> : <FiMoon size={14} />}
+            </button>
             <button
               onClick={() => setIsMenuOpen((prev) => !prev)}
-              className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors"
+              className="p-2 rounded-[3px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)] focus:outline-none transition-colors"
               aria-label="Toggle navigation menu"
               aria-expanded={isMenuOpen}
             >
-              {isMenuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
+              {isMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation Drawer */}
+        {/* MOBILE NAVIGATION DRAWER */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-100 py-4 space-y-4 animate-in slide-in-from-top-1 duration-200">
+          <div className="md:hidden border-t border-[var(--color-border)] py-4 space-y-4 font-mono text-xs animate-in slide-in-from-top-1 duration-150">
             {/* Mobile Search Input */}
             <form onSubmit={handleSearch} className="relative" role="search">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <FiSearch size={16} />
-              </div>
+              <FiSearch
+                size={14}
+                className="absolute inset-y-0 left-3 my-auto text-[var(--color-text-muted)] pointer-events-none"
+              />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search posts..."
-                className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
+                className="w-full pl-9 pr-8 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[3px] text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-all"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                  className="absolute inset-y-0 right-2.5 my-auto text-[var(--color-text-muted)] hover:text-[var(--color-text)] focus:outline-none"
                   aria-label="Clear search query"
                 >
                   <FiX size={14} />
@@ -322,81 +365,78 @@ const Navbar = () => {
               <Link
                 to="/"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center px-3 py-2 rounded-[3px] transition-colors ${
                   isActive('/')
-                    ? 'text-primary-600 bg-primary-50 font-semibold'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-semibold'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]'
                 }`}
               >
-                <FiHome
-                  size={18}
-                  className={isActive('/') ? 'text-primary-600' : 'text-gray-400'}
-                />
-                <span>Home</span>
+                Articles
               </Link>
               <Link
                 to="/categories"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center px-3 py-2 rounded-[3px] transition-colors ${
                   isActive('/categories')
-                    ? 'text-primary-600 bg-primary-50 font-semibold'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-semibold'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]'
                 }`}
               >
-                <FiTag
-                  size={18}
-                  className={isActive('/categories') ? 'text-primary-600' : 'text-gray-400'}
-                />
-                <span>Categories</span>
+                Topics
+              </Link>
+              <Link
+                to="/about"
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center px-3 py-2 rounded-[3px] transition-colors ${
+                  isActive('/about')
+                    ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-semibold'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]'
+                }`}
+              >
+                About
               </Link>
               {user && isAdmin() && (
                 <Link
                   to="/admin"
                   onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center px-3 py-2 rounded-[3px] transition-colors ${
                     isActive('/admin')
-                      ? 'text-primary-600 bg-primary-50 font-semibold'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-semibold'
+                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]'
                   }`}
                 >
-                  <FiShield
-                    size={18}
-                    className={isActive('/admin') ? 'text-primary-600' : 'text-gray-400'}
-                  />
-                  <span>Admin Dashboard</span>
+                  Admin Dashboard
                 </Link>
               )}
             </nav>
 
             {/* Mobile User Section */}
-            <div className="pt-3 border-t border-gray-100">
+            <div className="pt-3 border-t border-[var(--color-border)]">
               {user ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 px-3.5 py-2.5 bg-gray-50 rounded-lg">
-                    <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-xs uppercase flex-shrink-0">
-                      {user.email ? user.email.charAt(0).toUpperCase() : <FiUser size={14} />}
-                    </div>
+                  <div className="flex items-center gap-3 px-3 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[3px]">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-success)] shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-gray-500">Signed in as</p>
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Signed in as</p>
+                      <p className="text-xs font-semibold text-[var(--color-text)] truncate">
                         {user.email}
                       </p>
                     </div>
                     {isAdmin() ? (
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-primary-100 text-primary-700">
+                      <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded-[2px] bg-[var(--color-primary-muted)]/20 text-[var(--color-primary)] border border-[var(--color-primary-muted)]/40">
                         Admin
                       </span>
                     ) : (
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-gray-200 text-gray-600">
+                      <span className="text-[10px] uppercase font-medium px-1.5 py-0.5 rounded-[2px] bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">
                         Member
                       </span>
                     )}
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-[3px] text-xs font-medium text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-colors"
                   >
-                    <FiLogOut size={16} />
+                    <FiLogOut size={14} />
                     <span>Sign out</span>
                   </button>
                 </div>
@@ -405,14 +445,14 @@ const Navbar = () => {
                   <Link
                     to="/login"
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full py-2.5 px-3 rounded-lg text-sm font-medium text-center text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                    className="w-full py-2 px-3 rounded-[3px] text-xs font-medium text-center text-[var(--color-text)] border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                   >
                     Log in
                   </Link>
                   <Link
                     to="/register"
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full py-2.5 px-3 rounded-lg text-sm font-medium text-center text-white bg-primary-600 hover:bg-primary-700 shadow-xs transition-colors"
+                    className="w-full py-2 px-3 rounded-[3px] text-xs font-medium text-center text-white bg-[var(--color-primary)] hover:bg-[#7A4BC9] transition-colors"
                   >
                     Sign up
                   </Link>
