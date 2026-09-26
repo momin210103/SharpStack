@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./SharpStack-Backend
+      dockerfile: Blog.API/Dockerfile
+    image: momin210103/sharpstackbackend:v2.0
+    container_name: blog-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=db;Database=BlogDb;User=sa;Password=M@minZero3;TrustServerCertificate=True;Encrypt=False;
+
+  frontend:
+    build:
+      context: ./SharpStack-Frontend
+      dockerfile: Dockerfile
+    image: momin210103/sharpstackfrontend:v2.0
+    container_name: blog-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: blog-db
+    environment:
+      - SA_PASSWORD=M@minZero3
+      - ACCEPT_EULA=Y
+    ports:
+      - "1433:1433"
+    volumes:
+      - dbdata:/var/opt/mssql
+
+volumes:
+  dbdata:
