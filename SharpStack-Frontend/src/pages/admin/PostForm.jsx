@@ -318,7 +318,7 @@ const PostForm = () => {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-12">
+    <div className="space-y-8 max-w-10xl mx-auto pb-12">
       {/* PAGE HEADER */}
       <div className="pb-6 border-b border-[var(--color-border)]">
         <button
@@ -345,7 +345,7 @@ const PostForm = () => {
       {/* MAIN FORM CARD */}
       <form
         onSubmit={(e) => handleSubmit(e, false)}
-        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[4px] p-6 sm:p-8 space-y-7 shadow-xs"
+        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[4px] p-4 sm:p-5 md:p-6 lg:p-8 space-y-5 sm:space-y-6 lg:space-y-7"
       >
         {/* Post Title */}
         <div>
@@ -388,10 +388,14 @@ const PostForm = () => {
         </div>
 
         {/* Rich Text Editor */}
-        <div>
-          <label htmlFor="content" className="block font-mono text-xs font-semibold tracking-wider text-[var(--color-text-muted)] uppercase mb-2">
+        <div className="quill-editor-wrapper">
+          <label
+            htmlFor="content"
+            className="block font-mono text-xs font-semibold tracking-wider text-[var(--color-text-muted)] uppercase mb-2"
+          >
             Content <span className="text-[var(--color-primary)]">*</span>
           </label>
+
           <div className="border border-[var(--color-border)] rounded-[4px] overflow-hidden focus-within:border-[var(--color-primary)] bg-[var(--color-surface-secondary)] transition-colors">
             <ReactQuill
               theme="snow"
@@ -402,6 +406,7 @@ const PostForm = () => {
               style={{ minHeight: '380px' }}
             />
           </div>
+
           <p className="font-mono text-xs text-[var(--color-text-muted)] mt-2">
             Markdown formatting, code blocks, lists, and embeds supported.
           </p>
@@ -455,11 +460,10 @@ const PostForm = () => {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-[4px] p-8 text-center transition-all ${
-              isDragging
+            className={`border-2 border-dashed rounded-[4px] p-8 text-center transition-all ${isDragging
                 ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 scale-[1.005]'
                 : 'border-[var(--color-border)] hover:border-[var(--color-primary)] bg-[var(--color-surface-secondary)]/30'
-            }`}
+              }`}
           >
             <input
               type="file"

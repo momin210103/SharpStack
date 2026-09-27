@@ -65,7 +65,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 max-w-10xl">
       {/* SECTION 1 — MAIN HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 pb-6 border-b border-[var(--color-border)]">
         <div>

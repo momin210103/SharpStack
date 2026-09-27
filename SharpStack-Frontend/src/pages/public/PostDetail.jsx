@@ -223,7 +223,7 @@ const PostDetail = () => {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] transition-colors py-10 sm:py-14">
-      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
         {/* Navigation Breadcrumb */}
         <div className="mb-8">
           <Link

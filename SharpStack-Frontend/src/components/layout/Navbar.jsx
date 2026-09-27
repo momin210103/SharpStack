@@ -105,7 +105,7 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-[var(--color-bg)]/95 backdrop-blur-md border-b border-[var(--color-border)] text-[var(--color-text)] transition-colors">
-      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4 sm:gap-6">
           {/* LEFT: BRAND */}
           <div className="flex items-center gap-6 lg:gap-8">

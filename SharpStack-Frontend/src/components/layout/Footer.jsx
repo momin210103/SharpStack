@@ -29,7 +29,7 @@ const Footer = () => {
 
   return (
     <footer className="border-t border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] font-mono transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
         {/* 4-Column Responsive Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
           {/* 1. BRAND AREA */}
