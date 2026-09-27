@@ -18,17 +18,20 @@ namespace Blog.Application.Services
         private readonly IPostRepository _postRepository;
         private readonly IFileStorageService _fileStorageService;
         private readonly IConfiguration _configuration;
-        
-        
+
+        private readonly IImagesStorageService _imagesStorageService;
+
+
         public PostService(
-            IPostRepository postRepository, 
+            IPostRepository postRepository,
             IFileStorageService fileStorageService,
-            IConfiguration configuration)
+            IConfiguration configuration, IImagesStorageService imagesStorageService)
         {
             _postRepository = postRepository;
             _fileStorageService = fileStorageService;
             _configuration = configuration;
-            
+            _imagesStorageService = imagesStorageService;
+
         }
         public async Task<Guid> CreatePostAsync(CreatePostRequest request)
         {
@@ -61,13 +64,15 @@ namespace Blog.Application.Services
                     if (!_fileStorageService.IsFileSizeValid(file, maxFileSize))
                         throw new BadRequestException($"File {file.FileName} exceeds maximum size of {maxFileSize / (1024 * 1024)} MB.");
 
-                    var filePath = await _fileStorageService.SaveFileAsync(file, post.Id, uploadPath);
+                    // var filePath = await _fileStorageService.SaveFileAsync(file, post.Id, uploadPath);
+                    var uploadResult = await _imagesStorageService.UploadAsync(file, $"sharpstack/posts/{post.Id}");
 
                     var postImage = new PostImage
                     {
                         PostId = post.Id,
                         FileName = file.FileName,
-                        FilePath = filePath,
+                        FilePath = uploadResult.Url,
+                        CloudinaryPublicId = uploadResult.PublicId,
                         FileSize = file.Length,
                         ContentType = file.ContentType,
                         DisplayOrder = displayOrder,
@@ -89,7 +94,7 @@ namespace Blog.Application.Services
             var post = await _postRepository.GetByIdAsync(postId);
             if (post == null)
                 throw new NotFoundException("Post", postId);
-            
+
             await _postRepository.DeleteAsync(post);
         }
 
@@ -111,7 +116,7 @@ namespace Blog.Application.Services
                     Id = img.Id,
                     PostId = img.PostId,
                     FileName = img.FileName,
-                    Url = _fileStorageService.GetFileUrl(img.FilePath),
+                    Url = img.FilePath,
                     FileSize = img.FileSize,
                     ContentType = img.ContentType,
                     IsFeatured = img.IsFeatured,
@@ -119,8 +124,8 @@ namespace Blog.Application.Services
                     CreatedAt = img.CreatedAt
                 }).ToList()
             });
-            
-            
+
+
         }
 
         public async Task<PostResponse> GetBySlugAsync(string slug)
@@ -128,7 +133,7 @@ namespace Blog.Application.Services
             var post = await _postRepository.GetBySlugAsync(slug);
             if (post == null || !post.IsPublished)
                 throw new NotFoundException($"Published post with slug '{slug}' was not found.");
-            
+
             return new PostResponse
             {
                 Id = post.Id,
@@ -144,7 +149,7 @@ namespace Blog.Application.Services
                     Id = img.Id,
                     PostId = img.PostId,
                     FileName = img.FileName,
-                    Url = _fileStorageService.GetFileUrl(img.FilePath),
+                    Url = img.FilePath,
                     FileSize = img.FileSize,
                     ContentType = img.ContentType,
                     IsFeatured = img.IsFeatured,
@@ -159,9 +164,9 @@ namespace Blog.Application.Services
             var posts = await _postRepository.GetAllAsync();
             var query = posts.Where(p => p.IsPublished);
             if (CategoryId.HasValue)
-            query = query.Where(page => page.CategoryId == CategoryId.Value);
+                query = query.Where(page => page.CategoryId == CategoryId.Value);
             return query
-                .Skip((page -1) * pageSize)
+                .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(p => new PostResponse
                 {
@@ -178,7 +183,7 @@ namespace Blog.Application.Services
                         Id = img.Id,
                         PostId = img.PostId,
                         FileName = img.FileName,
-                        Url = _fileStorageService.GetFileUrl(img.FilePath),
+                        Url = img.FilePath,
                         FileSize = img.FileSize,
                         ContentType = img.ContentType,
                         IsFeatured = img.IsFeatured,
@@ -193,22 +198,22 @@ namespace Blog.Application.Services
             var post = await _postRepository.GetByIdAsync(postId);
             if (post == null)
                 throw new NotFoundException("Post", postId);
-        
+
             post.Title = request.Title;
             post.Content = request.Content;
-            post.CategoryId = request.CategoryId;  
+            post.CategoryId = request.CategoryId;
             post.UpdatedAt = DateTime.UtcNow;
-            await _postRepository.UpdateAsync(post); 
+            await _postRepository.UpdateAsync(post);
         }
         public async Task PublishAsync(Guid postId)
         {
             var post = await _postRepository.GetByIdAsync(postId);
             if (post == null)
                 throw new NotFoundException("Post", postId);
-            
+
             if (post.IsPublished)
                 throw new BadRequestException("Post is already published");
-            
+
             post.IsPublished = true;
             post.UpdatedAt = DateTime.UtcNow;
             await _postRepository.UpdateAsync(post);
@@ -252,13 +257,18 @@ namespace Blog.Application.Services
 
             foreach (var file in files)
             {
+                // Validate file Type
                 if (!_fileStorageService.IsValidImageFile(file))
                     throw new BadRequestException($"Invalid file format: {file.FileName}. Only JPG, JPEG, and PNG are allowed.");
 
+                // Validate file size
                 if (!_fileStorageService.IsFileSizeValid(file, maxFileSize))
                     throw new BadRequestException($"File {file.FileName} exceeds maximum size of {maxFileSize / (1024 * 1024)} MB.");
 
-                var filePath = await _fileStorageService.SaveFileAsync(file, postId, uploadPath);
+                // Upload Cloudinary
+                var uploadResult = await _imagesStorageService.UploadAsync(file, $"sharpstack/posts/{postId}");
+
+                // var filePath = await _fileStorageService.SaveFileAsync(file, postId, uploadPath);
                 var displayOrder = currentImageCount + newPostImages.Count;
                 var isFeatured = displayOrder == 0;
 
@@ -267,7 +277,8 @@ namespace Blog.Application.Services
                     // Let EF Core assign ID automatically
                     PostId = postId,
                     FileName = file.FileName,
-                    FilePath = filePath,
+                    FilePath = uploadResult.Url,
+                    CloudinaryPublicId = uploadResult.PublicId,
                     FileSize = file.Length,
                     ContentType = file.ContentType,
                     DisplayOrder = displayOrder,
@@ -282,7 +293,7 @@ namespace Blog.Application.Services
                     Id = postImage.Id,
                     PostId = postImage.PostId,
                     FileName = postImage.FileName,
-                    Url = _fileStorageService.GetFileUrl(filePath),
+                    Url = postImage.FilePath,
                     FileSize = postImage.FileSize,
                     ContentType = postImage.ContentType,
                     IsFeatured = postImage.IsFeatured,
@@ -292,10 +303,9 @@ namespace Blog.Application.Services
             }
 
             // Add images to the post's collection
-            foreach (var img in newPostImages)
-            {
-                post.Images.Add(img);
-            }
+            await _postRepository.AddImagesAsync(newPostImages);
+
+            await _postRepository.SaveChangesAsync();
 
             // Save changes - EF Core will only insert the new images
             await _postRepository.SaveChangesAsync();
@@ -319,7 +329,7 @@ namespace Blog.Application.Services
                 Id = img.Id,
                 PostId = img.PostId,
                 FileName = img.FileName,
-                Url = _fileStorageService.GetFileUrl(img.FilePath),
+                Url = img.FilePath,
                 FileSize = img.FileSize,
                 ContentType = img.ContentType,
                 IsFeatured = img.IsFeatured,
@@ -345,8 +355,10 @@ namespace Blog.Application.Services
             if (image == null)
                 throw new NotFoundException("Image", imageId);
 
-            // Delete physical file
-            await _fileStorageService.DeleteFileAsync(image.FilePath);
+            // Delete physical file for local
+            // await _fileStorageService.DeleteFileAsync(image.FilePath);
+
+            await _imagesStorageService.DeleteAsync(image.FilePath);
 
             // Remove from database
             post.Images.Remove(image);

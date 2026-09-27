@@ -16,6 +16,8 @@ namespace Blog.Application.Interfaces.Repositories
         Task DeleteAsync(Post post);
         Task SaveChangesAsync();
         Task<PostStatDto> GetPostStatisticsAsync();
+
+        Task AddImagesAsync(IEnumerable<PostImage> images);
         
     }
 }

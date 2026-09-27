@@ -11,6 +11,7 @@ using Blog.Infrastructure.Repositories;
 using Blog.Application.Interfaces.Services;
 using Blog.Application.Services;
 using Serilog;
+using Blog.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -109,6 +110,7 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IFileStorageService, Blog.Infrastructure.Services.FileStorageService>();
+builder.Services.AddScoped<IImagesStorageService,CloudinaryImageStorageService>();
 
 var app = builder.Build();
 

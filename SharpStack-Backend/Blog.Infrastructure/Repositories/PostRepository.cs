@@ -18,11 +18,11 @@ namespace Blog.Infrastructure.Repositories
             _context = context;
         }
 
-        public async  Task AddAsync(Post post)
+        public async Task AddAsync(Post post)
         {
             await _context.Posts.AddAsync(post);
-            await  _context.SaveChangesAsync();
-            
+            await _context.SaveChangesAsync();
+
         }
 
         public async Task DeleteAsync(Post post)
@@ -63,24 +63,41 @@ namespace Blog.Infrastructure.Repositories
 
         public async Task SaveChangesAsync()
         {
+            Console.WriteLine("========== CHANGE TRACKER ==========");
+
+            foreach (var entry in _context.ChangeTracker.Entries())
+            {
+                Console.WriteLine(
+                    $"Entity: {entry.Entity.GetType().Name} | " +
+                    $"State: {entry.State} | " +
+                    $"Id: {entry.Property("Id").CurrentValue}");
+            }
+
+            Console.WriteLine("====================================");
+
             await _context.SaveChangesAsync();
         }
 
         public async Task<PostStatDto> GetPostStatisticsAsync()
         {
-           var statistics = await _context.Posts
-            .GroupBy(p => 1)
-            .Select(x => new PostStatDto
-            {
-                TotalPosts = x.Count(),
-                PublishedPosts = x.Count(p => p.IsPublished),
-                UnpublishedPosts = x.Count(p => !p.IsPublished)
-            })
-            .FirstOrDefaultAsync();
+            var statistics = await _context.Posts
+             .GroupBy(p => 1)
+             .Select(x => new PostStatDto
+             {
+                 TotalPosts = x.Count(),
+                 PublishedPosts = x.Count(p => p.IsPublished),
+                 UnpublishedPosts = x.Count(p => !p.IsPublished)
+             })
+             .FirstOrDefaultAsync();
 
             return statistics ?? new PostStatDto();
         }
 
         // Implement repository methods here
+
+        public async Task AddImagesAsync(IEnumerable<PostImage> images)
+        {
+            await _context.PostImages.AddRangeAsync(images);
+        }
     }
 }
