@@ -7,7 +7,6 @@ import {
   FiPlus,
   FiTag,
   FiArrowRight,
-  FiExternalLink,
 } from 'react-icons/fi';
 import statisticService from '../../services/statisticService';
 import postService from '../../services/postService';

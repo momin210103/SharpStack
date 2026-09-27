@@ -3,7 +3,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import postService from '../../services/postService';
 import categoryService from '../../services/categoryService';
 import toast from 'react-hot-toast';
-import { FiSave, FiArrowLeft, FiImage, FiX, FiUpload } from 'react-icons/fi';
+import {
+  FiSave,
+  FiArrowLeft,
+  FiImage,
+  FiX,
+  FiUploadCloud,
+  FiCheck,
+  FiStar,
+} from 'react-icons/fi';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { getImageUrl } from '../../utils/imageUrl';
 import ReactQuill from 'react-quill-new';
@@ -13,7 +21,7 @@ import '../../styles/quill-custom.css';
 const PostForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const isEditMode = !!id;
+  const isEditMode = Boolean(id);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -27,11 +35,13 @@ const PostForm = () => {
   const [previewUrls, setPreviewUrls] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     fetchCategories();
     if (isEditMode) {
       fetchPost();
+      fetchExistingImages();
     } else {
       setInitialLoading(false);
     }
@@ -40,8 +50,9 @@ const PostForm = () => {
   const fetchCategories = async () => {
     try {
       const data = await categoryService.getAll();
-      setCategories(data);
+      setCategories(data || []);
     } catch (error) {
+      console.error('Failed to load categories', error);
       toast.error('Failed to load categories');
     }
   };
@@ -49,19 +60,29 @@ const PostForm = () => {
   const fetchPost = async () => {
     try {
       const posts = await postService.getAllPosts();
-      const post = posts.find((p) => p.id === id);
+      const post = posts.find((p) => String(p.id) === String(id));
       if (post) {
         setFormData({
-          title: post.title,
-          content: post.content,
-          categoryId: post.categoryId,
-          imageUrl: post.imageUrl,
+          title: post.title || '',
+          content: post.content || '',
+          categoryId: post.categoryId || '',
         });
       }
     } catch (error) {
+      console.error('Failed to load post', error);
       toast.error('Failed to load post');
     } finally {
       setInitialLoading(false);
+    }
+  };
+
+  const fetchExistingImages = async () => {
+    if (!id) return;
+    try {
+      const response = await postService.getPostImages(id);
+      setExistingImages(response.images || response || []);
+    } catch (error) {
+      console.error('Failed to load existing images:', error);
     }
   };
 
@@ -80,42 +101,69 @@ const PostForm = () => {
     }));
   };
 
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-
-    // Validate file types
-    const validFiles = files.filter(file => {
+  const processFiles = (files) => {
+    const validFiles = files.filter((file) => {
       const isImage = file.type.startsWith('image/');
       const isValidFormat = ['image/jpeg', 'image/jpg', 'image/png'].includes(file.type);
       if (!isImage || !isValidFormat) {
-        toast.error(`${file.name} is not a valid image format. Only JPG, JPEG, and PNG are allowed.`);
+        toast.error(`${file.name} is not a valid format. Only JPG, JPEG, and PNG are allowed.`);
         return false;
       }
-      // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} exceeds 5MB limit.`);
+        toast.error(`${file.name} exceeds the 5MB limit.`);
         return false;
       }
       return true;
     });
 
     if (validFiles.length > 0) {
-      setSelectedFiles(prev => [...prev, ...validFiles]);
+      const totalCount = selectedFiles.length + validFiles.length;
+      if (totalCount > 10) {
+        toast.error('Maximum 10 images allowed. Excess files were ignored.');
+        validFiles.splice(10 - selectedFiles.length);
+      }
 
-      // Create preview URLs
-      validFiles.forEach(file => {
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
+
+      validFiles.forEach((file) => {
         const reader = new FileReader();
         reader.onloadend = () => {
-          setPreviewUrls(prev => [...prev, reader.result]);
+          setPreviewUrls((prev) => [...prev, reader.result]);
         };
         reader.readAsDataURL(file);
       });
     }
   };
 
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    processFiles(files);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(Array.from(e.dataTransfer.files));
+    }
+  };
+
   const removeSelectedFile = (index) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleDeleteExistingImage = async (imageId) => {
@@ -128,6 +176,7 @@ const PostForm = () => {
       toast.success('Image deleted successfully');
       fetchExistingImages();
     } catch (error) {
+      console.error('Failed to delete image', error);
       toast.error('Failed to delete image');
     }
   };
@@ -151,26 +200,33 @@ const PostForm = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const handleSubmit = async (e, shouldPublish = false) => {
+    if (e && e.preventDefault) e.preventDefault();
 
     if (!formData.title.trim()) {
-      toast.error('Title is required');
+      toast.error('Post Title is required');
       return;
     }
 
-    // Check if content is empty (handling HTML tags)
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = formData.content;
     const textContent = tempDiv.textContent || tempDiv.innerText || '';
 
     if (!textContent.trim()) {
-      toast.error('Content is required');
+      toast.error('Post Content is required');
       return;
     }
 
     if (!formData.categoryId) {
-      toast.error('Category is required');
+      toast.error('Please select a category');
       return;
     }
 
@@ -178,47 +234,55 @@ const PostForm = () => {
       setLoading(true);
 
       if (isEditMode) {
-        // Update post
         await postService.updatePost(id, formData);
 
-        // Upload new images if any
         if (selectedFiles.length > 0) {
           await handleUploadImages(id);
         }
 
-        toast.success('Post updated successfully');
+        if (shouldPublish) {
+          try {
+            await postService.publishPost(id);
+          } catch (err) {
+            console.error('Publish error:', err);
+          }
+        }
+
+        toast.success(shouldPublish ? 'Post updated and published' : 'Post updated successfully');
       } else {
-        // Create post with images
         const postFormData = new FormData();
         postFormData.append('Title', formData.title);
         postFormData.append('Content', formData.content);
         postFormData.append('CategoryId', formData.categoryId);
 
-        // Append images - must match property name "Images"
+        if (shouldPublish) {
+          postFormData.append('IsPublished', 'true');
+        }
+
         selectedFiles.forEach((file) => {
           postFormData.append('Images', file);
         });
 
-        // Debug log
-        console.log('FormData entries:');
-        for (let pair of postFormData.entries()) {
-          console.log(pair[0] + ':', pair[1]);
+        const created = await postService.createPost(postFormData);
+        const createdId = created?.id || created?.postId;
+
+        if (shouldPublish && createdId) {
+          try {
+            await postService.publishPost(createdId);
+          } catch (err) {
+            console.error('Publish error:', err);
+          }
         }
 
-        await postService.createPost(postFormData);
-        toast.success('Post created successfully');
+        toast.success(shouldPublish ? 'Post published successfully' : 'Post saved as draft');
       }
 
       navigate('/admin/posts');
     } catch (error) {
       console.error('Post submission error:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      console.error('Error headers:', error.response?.headers);
-
-      const errorMessage = error.response?.data?.message ||
+      const errorMessage =
+        error.response?.data?.message ||
         error.response?.data?.title ||
-        error.response?.data?.errors ||
         error.message ||
         (isEditMode ? 'Failed to update post' : 'Failed to create post');
       toast.error(typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage);
@@ -229,50 +293,64 @@ const PostForm = () => {
 
   const quillModules = {
     toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      [{ 'font': [] }],
-      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      [{ font: [] }],
+      [{ size: ['small', false, 'large', 'huge'] }],
       ['bold', 'italic', 'underline', 'strike'],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'script': 'sub' }, { 'script': 'super' }],
-      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-      [{ 'indent': '-1' }, { 'indent': '+1' }],
-      [{ 'direction': 'rtl' }],
-      [{ 'align': [] }],
+      [{ color: [] }, { background: [] }],
+      [{ script: 'sub' }, { script: 'super' }],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      [{ indent: '-1' }, { indent: '+1' }],
+      [{ align: [] }],
       ['blockquote', 'code-block'],
       ['link', 'image', 'video'],
-      ['clean']
-    ]
+      ['clean'],
+    ],
   };
 
   if (initialLoading) {
     return (
-      <div className="flex justify-center py-20">
+      <div className="flex flex-col items-center justify-center py-24 space-y-4">
         <LoadingSpinner size="large" />
+        <p className="font-mono text-xs text-[var(--color-text-muted)]">Loading post editor...</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="mb-8">
+    <div className="space-y-8 max-w-5xl mx-auto pb-12">
+      {/* PAGE HEADER */}
+      <div className="pb-6 border-b border-[var(--color-border)]">
         <button
+          type="button"
           onClick={() => navigate('/admin/posts')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          className="inline-flex items-center gap-1.5 font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors mb-3 group"
         >
-          <FiArrowLeft />
-          Back to Posts
+          <FiArrowLeft className="group-hover:-translate-x-0.5 transition-transform" size={13} />
+          <span>← Back to Posts</span>
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <div className="font-mono text-xs font-semibold tracking-widest text-[var(--color-primary)] uppercase mb-2">
+          — {isEditMode ? 'EDIT WORKFLOW' : 'AUTHORING'}
+        </div>
+        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[var(--color-text)] tracking-tight">
           {isEditMode ? 'Edit Post' : 'Create New Post'}
         </h1>
+        <p className="font-serif text-base text-[var(--color-text-muted)] mt-2 leading-relaxed">
+          {isEditMode
+            ? 'Update and manage your article content and details.'
+            : 'Write and publish a new article to SharpStack.'}
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md p-6 space-y-6">
-        {/* Title */}
+      {/* MAIN FORM CARD */}
+      <form
+        onSubmit={(e) => handleSubmit(e, false)}
+        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[4px] p-6 sm:p-8 space-y-7 shadow-xs"
+      >
+        {/* Post Title */}
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-            Title *
+          <label htmlFor="title" className="block font-mono text-xs font-semibold tracking-wider text-[var(--color-text-muted)] uppercase mb-2">
+            Post Title <span className="text-[var(--color-primary)]">*</span>
           </label>
           <input
             id="title"
@@ -281,16 +359,16 @@ const PostForm = () => {
             required
             value={formData.title}
             onChange={handleChange}
-            className="input-field"
-            placeholder="Enter post title"
+            placeholder="Enter an engaging post title..."
             maxLength={200}
+            className="w-full px-4 py-2.5 rounded-[3px] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] text-[var(--color-text)] font-serif text-base placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] outline-none transition-colors"
           />
         </div>
 
         {/* Category */}
         <div>
-          <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 mb-2">
-            Category *
+          <label htmlFor="categoryId" className="block font-mono text-xs font-semibold tracking-wider text-[var(--color-text-muted)] uppercase mb-2">
+            Category <span className="text-[var(--color-primary)]">*</span>
           </label>
           <select
             id="categoryId"
@@ -298,7 +376,7 @@ const PostForm = () => {
             required
             value={formData.categoryId}
             onChange={handleChange}
-            className="input-field"
+            className="w-full px-4 py-2.5 rounded-[3px] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] text-[var(--color-text)] font-mono text-xs focus:border-[var(--color-primary)] outline-none transition-colors cursor-pointer"
           >
             <option value="">Select a category</option>
             {categories.map((category) => (
@@ -309,69 +387,62 @@ const PostForm = () => {
           </select>
         </div>
 
-        {/* Content */}
+        {/* Rich Text Editor */}
         <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-            Content *
+          <label htmlFor="content" className="block font-mono text-xs font-semibold tracking-wider text-[var(--color-text-muted)] uppercase mb-2">
+            Content <span className="text-[var(--color-primary)]">*</span>
           </label>
-          <ReactQuill
-            theme="snow"
-            value={formData.content}
-            onChange={handleContentChange}
-            className="bg-white"
-            modules={quillModules}
-            formats={[
-              'header', 'font', 'size',
-              'bold', 'italic', 'underline', 'strike',
-              'color', 'background',
-              'script',
-              'list', 'bullet', 'indent',
-              'direction', 'align',
-              'blockquote', 'code-block',
-              'link', 'image', 'video'
-            ]}
-            placeholder="Write your post content..."
-            style={{ minHeight: '400px' }}
-          />
-          <p className="text-sm text-gray-500 mt-2">
-            Rich text content with formatting
+          <div className="border border-[var(--color-border)] rounded-[4px] overflow-hidden focus-within:border-[var(--color-primary)] bg-[var(--color-surface-secondary)] transition-colors">
+            <ReactQuill
+              theme="snow"
+              value={formData.content}
+              onChange={handleContentChange}
+              modules={quillModules}
+              placeholder="Write your article content..."
+              style={{ minHeight: '380px' }}
+            />
+          </div>
+          <p className="font-mono text-xs text-[var(--color-text-muted)] mt-2">
+            Markdown formatting, code blocks, lists, and embeds supported.
           </p>
         </div>
 
-        {/* Images Section */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <FiImage className="inline mr-2" />
-            Images (Optional - Max 10 images, 5MB each)
+        {/* Images Upload Section */}
+        <div className="pt-2">
+          <label className="block font-mono text-xs font-semibold tracking-wider text-[var(--color-text-muted)] uppercase mb-2">
+            Images (Optional)
           </label>
 
-          {/* Existing Images (Edit Mode) */}
+          {/* Existing Images in Edit Mode */}
           {isEditMode && existingImages.length > 0 && (
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">Existing Images:</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {existingImages.map((image) => (
-                  <div key={image.id} className="relative group">
+            <div className="mb-5 p-4 bg-[var(--color-surface-secondary)]/50 border border-[var(--color-border)] rounded-[4px]">
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--color-primary)] mb-3">
+                // EXISTING ARTICLE IMAGES:
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {existingImages.map((image, idx) => (
+                  <div key={image.id} className="relative rounded-[3px] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden group">
                     <img
                       src={getImageUrl(image.url)}
-                      alt={image.fileName}
-                      className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                      alt={image.fileName || 'Uploaded'}
+                      className="w-full h-28 object-cover"
                       onError={(e) => {
-                        console.error('Failed to load image:', e.target.src);
                         e.target.alt = 'Failed to load';
                       }}
                     />
-                    {image.isFeatured && (
-                      <span className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
+                    {idx === 0 && (
+                      <span className="absolute top-2 left-2 bg-[var(--color-primary)] text-white font-mono text-[10px] font-semibold px-2 py-0.5 rounded-[2px] shadow-xs flex items-center gap-1">
+                        <FiStar size={10} />
                         Featured
                       </span>
                     )}
                     <button
                       type="button"
                       onClick={() => handleDeleteExistingImage(image.id)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full shadow-md transition-opacity opacity-0 group-hover:opacity-100"
+                      title="Delete image"
                     >
-                      <FiX size={16} />
+                      <FiX size={14} />
                     </button>
                   </div>
                 ))}
@@ -379,8 +450,17 @@ const PostForm = () => {
             </div>
           )}
 
-          {/* File Upload Input */}
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
+          {/* Drag & Drop Upload Zone */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`border-2 border-dashed rounded-[4px] p-8 text-center transition-all ${
+              isDragging
+                ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 scale-[1.005]'
+                : 'border-[var(--color-border)] hover:border-[var(--color-primary)] bg-[var(--color-surface-secondary)]/30'
+            }`}
+          >
             <input
               type="file"
               id="images"
@@ -388,50 +468,52 @@ const PostForm = () => {
               accept="image/jpeg,image/jpg,image/png"
               onChange={handleFileSelect}
               className="hidden"
-              disabled={loading}
+              disabled={loading || uploadingImages}
             />
-            <label
-              htmlFor="images"
-              className="cursor-pointer flex flex-col items-center"
-            >
-              <FiUpload className="text-4xl text-gray-400 mb-2" />
-              <span className="text-sm text-gray-600">
+            <label htmlFor="images" className="cursor-pointer flex flex-col items-center select-none">
+              <div className="w-12 h-12 rounded-[4px] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] text-[var(--color-primary)] flex items-center justify-center mb-3">
+                <FiUploadCloud size={24} />
+              </div>
+              <span className="font-mono text-xs font-semibold text-[var(--color-text)]">
                 Click to upload or drag and drop
               </span>
-              <span className="text-xs text-gray-500 mt-1">
-                JPG, JPEG or PNG (Max 5MB each)
+              <span className="font-mono text-[11px] text-[var(--color-text-muted)] mt-1">
+                JPG, JPEG or PNG (Maximum 5MB per image, up to 10 images)
               </span>
             </label>
           </div>
 
-          {/* Image Previews */}
+          {/* Selected File Previews */}
           {previewUrls.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-2">
-                Selected Images ({selectedFiles.length}):
+            <div className="mt-4 p-4 bg-[var(--color-surface-secondary)]/50 border border-[var(--color-border)] rounded-[4px]">
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--color-primary)] mb-3">
+                // SELECTED IMAGES TO UPLOAD ({selectedFiles.length}):
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {previewUrls.map((url, index) => (
-                  <div key={index} className="relative group">
+                  <div key={index} className="relative rounded-[3px] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden group">
                     <img
                       src={url}
                       alt={`Preview ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg border-2 border-primary-200"
+                      className="w-full h-28 object-cover"
                     />
                     {index === 0 && (
-                      <span className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
+                      <span className="absolute top-2 left-2 bg-[var(--color-primary)] text-white font-mono text-[10px] font-semibold px-2 py-0.5 rounded-[2px] shadow-xs flex items-center gap-1">
+                        <FiStar size={10} />
                         Featured
                       </span>
                     )}
                     <button
                       type="button"
                       onClick={() => removeSelectedFile(index)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full shadow-md transition-opacity opacity-0 group-hover:opacity-100"
+                      title="Remove image"
                     >
-                      <FiX size={16} />
+                      <FiX size={14} />
                     </button>
-                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg">
-                      {selectedFiles[index]?.name}
+                    <div className="p-2 border-t border-[var(--color-border)] font-mono text-[10px] text-[var(--color-text-muted)] truncate">
+                      <p className="truncate text-[var(--color-text)]">{selectedFiles[index]?.name}</p>
+                      <p>{formatFileSize(selectedFiles[index]?.size)}</p>
                     </div>
                   </div>
                 ))}
@@ -440,33 +522,48 @@ const PostForm = () => {
           )}
         </div>
 
-        {/* Submit Button */}
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={loading || uploadingImages}
-            className="btn-primary flex items-center gap-2 disabled:opacity-50"
-          >
-            {loading || uploadingImages ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                {uploadingImages ? 'Uploading Images...' : isEditMode ? 'Updating...' : 'Creating...'}
-              </>
-            ) : (
-              <>
-                <FiSave />
-                {isEditMode ? 'Update Post' : 'Create Post'}
-              </>
-            )}
-          </button>
+        {/* FORM ACTIONS */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-[var(--color-border)] font-mono text-xs">
           <button
             type="button"
             onClick={() => navigate('/admin/posts')}
-            className="btn-secondary"
             disabled={loading || uploadingImages}
+            className="px-4 py-2.5 rounded-[3px] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-secondary)] transition-colors"
           >
             Cancel
           </button>
+
+          <div className="flex items-center gap-3">
+            {/* Save Draft */}
+            <button
+              type="button"
+              onClick={(e) => handleSubmit(e, false)}
+              disabled={loading || uploadingImages}
+              className="px-4 py-2.5 rounded-[3px] border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-secondary)] text-[var(--color-text)] font-semibold transition-colors disabled:opacity-50"
+            >
+              Save Draft
+            </button>
+
+            {/* Publish Post / Update Post */}
+            <button
+              type="button"
+              onClick={(e) => handleSubmit(e, true)}
+              disabled={loading || uploadingImages}
+              className="px-5 py-2.5 rounded-[3px] bg-[var(--color-primary)] hover:bg-[#7A4BC9] text-white font-semibold shadow-xs transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              {loading || uploadingImages ? (
+                <>
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></div>
+                  <span>{uploadingImages ? 'Uploading...' : 'Processing...'}</span>
+                </>
+              ) : (
+                <>
+                  <FiCheck size={14} />
+                  <span>{isEditMode ? 'Update Post' : 'Publish Post'}</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>

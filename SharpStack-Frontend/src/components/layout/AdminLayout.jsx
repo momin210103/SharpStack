@@ -39,7 +39,7 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] flex flex-col lg:flex-row transition-colors selection:bg-[var(--color-primary)] selection:text-white">
-      {/* Mobile & Tablet Top Navigation Header (< lg) */}
+      {/* Mobile Top Navigation Header (< lg) */}
       <header className="lg:hidden sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)] px-4 sm:px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -70,7 +70,7 @@ const AdminLayout = () => {
         </Link>
       </header>
 
-      {/* Sidebar (Drawer on mobile, Sticky sidebar on desktop) */}
+      {/* Sidebar (Desktop Sticky / Mobile Off-canvas Drawer) */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 w-64 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col justify-between
@@ -79,11 +79,12 @@ const AdminLayout = () => {
           ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
         `}
       >
-        {/* Sidebar Header */}
-        <div>
+        {/* Sidebar Header & Navigation */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Logo / Brand Header */}
           <div className="p-5 sm:p-6 border-b border-[var(--color-border)] flex items-center justify-between">
             <Link
-              to="/"
+              to="/admin"
               className="flex items-center font-mono font-bold text-lg tracking-tight select-none group"
             >
               <span className="text-[var(--color-primary)] text-xl font-bold mr-1 group-hover:scale-110 transition-transform">
@@ -107,8 +108,8 @@ const AdminLayout = () => {
             </button>
           </div>
 
-          {/* Navigation Section */}
-          <div className="px-4 py-5">
+          {/* Navigation Links */}
+          <div className="px-4 py-5 flex-1 overflow-y-auto">
             <div className="px-3 pb-2 font-mono text-[10px] font-semibold tracking-widest text-[var(--color-text-muted)] uppercase">
               NAVIGATION
             </div>
@@ -144,9 +145,9 @@ const AdminLayout = () => {
           </div>
         </div>
 
-        {/* Sidebar Footer: Admin User & Logout */}
+        {/* Sidebar Footer: User Profile & Logout */}
         <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-surface)] space-y-3">
-          {/* User Profile Card */}
+          {/* User Profile */}
           <div className="flex items-center gap-3 px-2 py-1">
             <div className="w-8 h-8 rounded-[3px] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-center justify-center font-mono text-xs font-bold text-[var(--color-primary)] uppercase shrink-0">
               {user?.email ? user.email.charAt(0).toUpperCase() : 'A'}
@@ -172,7 +173,7 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      {/* Overlay Backdrop for Mobile Drawer */}
+      {/* Backdrop Overlay for Mobile Drawer */}
       {sidebarOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-40 transition-opacity"
@@ -183,7 +184,7 @@ const AdminLayout = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 min-w-0 min-h-screen bg-[var(--color-bg)] overflow-x-hidden">
-        <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-10">
+        <div className="w-full max-w-[1440px] mx-auto p-4 sm:p-6 lg:p-10">
           <Outlet />
         </div>
       </main>
