@@ -18,6 +18,7 @@ import { getImageUrl } from '../../utils/imageUrl';
 import { stripHtmlTags } from '../../utils/textUtils';
 import 'react-quill-new/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
+import { Helmet } from 'react-helmet-async';
 
 const PostDetail = () => {
   const { slug } = useParams();
@@ -221,6 +222,54 @@ const PostDetail = () => {
     );
   }
 
+  <Helmet>
+    <title>{post.title} | SharpStack</title>
+
+    <meta
+      name="description"
+      content={
+        stripHtmlTags(post.content)
+          .replace(/\s+/g, ' ')
+          .slice(0, 160)
+      }
+    />
+
+    <link
+      rel="canonical"
+      href={`https://sharpstackbd.onrender.com/post/${post.slug}`}
+    />
+
+    {/* Open Graph */}
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content={`${post.title} | SharpStack`} />
+    <meta
+      property="og:description"
+      content={stripHtmlTags(post.content).replace(/\s+/g, ' ').slice(0, 160)}
+    />
+    <meta
+      property="og:url"
+      content={`https://sharpstackbd.onrender.com/post/${post.slug}`}
+    />
+
+    {images.length > 0 && (
+      <meta
+        property="og:image"
+        content={getImageUrl(images[0].url)}
+      />
+    )}
+
+    <meta
+      property="article:published_time"
+      content={post.createdAt}
+    />
+
+    <meta
+      property="article:section"
+      content={post.categoryName || 'Engineering'}
+    />
+  </Helmet>
+
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] transition-colors py-10 sm:py-14">
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -326,11 +375,10 @@ const PostDetail = () => {
                           key={image.id}
                           type="button"
                           onClick={() => setSelectedImage(imgUrl)}
-                          className={`cursor-pointer rounded-[3px] overflow-hidden border-2 transition-all w-20 h-14 bg-[var(--color-surface-secondary)] ${
-                            isSelected
-                              ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20'
-                              : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)] opacity-70 hover:opacity-100'
-                          }`}
+                          className={`cursor-pointer rounded-[3px] overflow-hidden border-2 transition-all w-20 h-14 bg-[var(--color-surface-secondary)] ${isSelected
+                            ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20'
+                            : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)] opacity-70 hover:opacity-100'
+                            }`}
                         >
                           <img
                             src={imgUrl}
