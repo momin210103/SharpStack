@@ -64,44 +64,36 @@ const Home = () => {
     return `${minutes} min read`;
   };
 
+  const scrollToArticles = () =>
+    document.getElementById('articles')?.scrollIntoView({ behavior: 'smooth' });
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] transition-colors overflow-x-hidden ">
       {/* SECTION 1 — HERO */}
       <section className="border-b border-[var(--color-border)]">
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            {/* Left Column: Text & Content */}
             <div className="lg:col-span-7">
-              {/* Small kicker */}
               <div className="font-mono text-xs font-semibold tracking-widest text-[var(--color-primary)] uppercase mb-4">
                 — DEVELOPER KNOWLEDGE PLATFORM
               </div>
-
-              {/* Main heading */}
               <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[var(--color-text)] leading-[1.1] mb-6">
                 Learn. Build. Share. Grow.
               </h1>
-
-              {/* Supporting text */}
               <p className="font-serif text-lg sm:text-xl text-[var(--color-text-muted)] leading-relaxed max-w-2xl lg:max-w-3xl mb-8">
                 Practical knowledge, real-world solutions, and engineering insights for modern developers.
               </p>
-
-              {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-4">
-                {/* Primary Button */}
                 <a
                   href="#articles"
                   onClick={(e) => {
                     e.preventDefault();
-                    document.getElementById('articles')?.scrollIntoView({ behavior: 'smooth' });
+                    scrollToArticles();
                   }}
                   className="inline-flex items-center gap-2 font-mono text-xs font-semibold px-5 py-3 rounded-[3px] bg-[var(--color-primary)] hover:bg-[#7A4BC9] text-white shadow-xs transition-colors"
                 >
                   Explore Articles →
                 </a>
-
-                {/* Secondary Button */}
                 <Link
                   to={user && isAdmin() ? '/admin/posts/create' : (user ? '/categories' : '/login')}
                   className="inline-flex items-center gap-2 font-mono text-xs font-semibold px-5 py-3 rounded-[3px] border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-secondary)] text-[var(--color-text)] hover:border-[var(--color-primary-muted)] transition-colors"
@@ -111,11 +103,9 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Right Column: Visual Developer Terminal */}
             <div className="lg:col-span-5">
               <div className="w-full max-w-xl mx-auto lg:max-w-none">
                 <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[6px] shadow-2xl overflow-hidden font-mono text-xs select-none">
-                  {/* Terminal Header */}
                   <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-surface-secondary)]/50">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#FF5F56] opacity-80" />
@@ -127,29 +117,19 @@ const Home = () => {
                     </div>
                     <div className="w-10" />
                   </div>
-
-                  {/* Terminal Content */}
                   <div className="p-6 space-y-3 font-mono leading-relaxed">
                     <div className="flex items-center gap-2 text-[var(--color-text)]">
                       <span className="text-[var(--color-primary)] font-bold">$</span>
                       <span>dotnet run</span>
                     </div>
-
                     <div className="pt-2 space-y-2 text-xs">
-                      <div className="flex items-center gap-2 text-[var(--color-success)] font-medium">
-                        <span>✓</span>
-                        <span>Build successful</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[var(--color-success)] font-medium">
-                        <span>✓</span>
-                        <span>API running</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[var(--color-success)] font-medium">
-                        <span>✓</span>
-                        <span>Ready to learn</span>
-                      </div>
+                      {['Build successful', 'API running', 'Ready to learn'].map((t) => (
+                        <div key={t} className="flex items-center gap-2 text-[var(--color-success)] font-medium">
+                          <span>✓</span>
+                          <span>{t}</span>
+                        </div>
+                      ))}
                     </div>
-
                     <div className="pt-3 text-[var(--color-text-muted)] flex items-center gap-1 text-[11px]">
                       <span className="text-[var(--color-primary)] opacity-70">&gt;</span>
                       <span>Listening on localhost:5000</span>
@@ -169,7 +149,7 @@ const Home = () => {
           className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/30 backdrop-blur-xs sticky top-16 z-20"
           aria-label="Filter by Topic"
         >
-          <div className="w-full  mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
               <button
                 onClick={() => {
@@ -206,16 +186,15 @@ const Home = () => {
       )}
 
       {/* SECTION 2 — LATEST ARTICLES */}
-      <section id="articles" className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 mb-10 pb-4 border-b border-[var(--color-border)]">
+      <section id="articles" className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 mb-8 pb-4 border-b border-[var(--color-border)]">
           <div>
             <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-[var(--color-text)] tracking-tight">
               Latest Articles
             </h2>
             <p className="font-serif text-sm text-[var(--color-text-muted)] mt-1">
               {selectedCategory
-                ? `Showing articles filtered by selected topic`
+                ? 'Showing articles filtered by selected topic'
                 : 'Practical engineering insights, architectural patterns, and deep dives'}
             </p>
           </div>
@@ -224,13 +203,10 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Content State */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
             <LoadingSpinner size="large" />
-            <p className="font-mono text-xs text-[var(--color-text-muted)]">
-              Loading articles...
-            </p>
+            <p className="font-mono text-xs text-[var(--color-text-muted)]">Loading articles...</p>
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-20 px-6 border border-dashed border-[var(--color-border)] rounded-[4px] bg-[var(--color-surface)]/40 max-w-lg mx-auto">
@@ -254,72 +230,59 @@ const Home = () => {
           </div>
         ) : (
           <>
-            {/* 3-Column Editorial Grid (Desktop: 3 cols, Tablet: 2 cols, Mobile: 1 col) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Compact card grid: 1 col mobile, 2 tablet, 3 desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
               {posts.map((post, index) => (
                 <Link
                   key={`${post.id ?? post.slug ?? 'post'}-${index}`}
                   to={`/post/${post.slug}`}
-                  className="group flex flex-col justify-between p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[4px] hover:border-[var(--color-primary-muted)] transition-all duration-200 hover:-translate-y-0.5 shadow-xs"
+                  className="group flex flex-col overflow-hidden bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[6px] hover:border-[var(--color-primary-muted)] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 transition-all duration-200"
                 >
-                  <div>
-                    {/* Article Image Container */}
-                    <div className="relative aspect-[16/10] overflow-hidden rounded-[3px] border border-[var(--color-border)] bg-[var(--color-surface-secondary)] mb-4">
-                      {post.images?.[0]?.url ? (
-                        <img
-                          src={getImageUrl(post.images[0].url)}
-                          alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
-                          loading="lazy"
-                        />
-                      ) : (
-                        /* Subtle Category-Based Technical Placeholder */
-                        <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-[var(--color-surface)] to-[var(--color-surface-secondary)] text-center relative overflow-hidden select-none">
-                          <div className="absolute -right-3 -bottom-3 text-[var(--color-border)]/40 font-mono text-6xl font-bold pointer-events-none select-none">
-                            #
-                          </div>
-                          <span className="font-mono text-[10px] tracking-widest text-[var(--color-primary)] uppercase mb-1">
-                            // {post.categoryName || 'ENGINEERING'}
-                          </span>
-                          <span className="font-mono text-xs text-[var(--color-text-muted)] font-medium">
-                            &lt;SharpStack /&gt;
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Category */}
-                    <div className="font-mono text-[11px] font-semibold tracking-wider text-[var(--color-primary)] uppercase mb-2">
-                      {post.categoryName || 'DEVELOPMENT'}
-                    </div>
-
-                    {/* Article Title */}
-                    <h3 className="font-serif text-xl font-semibold text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors line-clamp-2 leading-snug mb-2.5">
-                      {post.title}
-                    </h3>
-
-                    {/* Short Excerpt */}
-                    <p className="font-serif text-[15px] text-[var(--color-text-muted)] line-clamp-3 leading-relaxed mb-4">
-                      {getTextExcerpt(post.content, 140)}
-                    </p>
+                  {/* Image (full-bleed, 16:9) */}
+                  <div className="relative aspect-[16/9] overflow-hidden bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                    {post.images?.[0]?.url ? (
+                      <img
+                        src={getImageUrl(post.images[0].url)}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--color-surface)] to-[var(--color-surface-secondary)] select-none">
+                        <span className="font-mono text-2xl text-[var(--color-primary)] opacity-60">
+                          &lt;/&gt;
+                        </span>
+                      </div>
+                    )}
+                    <span className="absolute top-2.5 left-2.5 font-mono text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-[3px] bg-[var(--color-bg)]/80 backdrop-blur-sm text-[var(--color-primary)] border border-[var(--color-border)]">
+                      {post.categoryName || 'Development'}
+                    </span>
                   </div>
 
-                  {/* Metadata: Reading Time & Date */}
-                  <div className="flex items-center gap-3 font-mono text-xs text-[var(--color-text-muted)] pt-3 border-t border-[var(--color-border)]/60 mt-auto">
-                    <span>{calculateReadingTime(post.content)}</span>
-                    <span>·</span>
-                    <span>{formatDate(post.createdAt)}</span>
+                  {/* Body */}
+                  <div className="flex flex-col flex-1 p-3.5">
+                    <h3 className="font-serif text-base font-semibold text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors line-clamp-2 leading-snug mb-1">
+                      {post.title}
+                    </h3>
+                    <p className="font-serif text-[13px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed mb-3">
+                      {getTextExcerpt(post.content, 90)}
+                    </p>
+
+                    <div className="mt-auto flex items-center justify-between pt-2.5 border-t border-[var(--color-border)]/60 font-mono text-[10px] text-[var(--color-text-muted)]">
+                      <span>{formatDate(post.createdAt)}</span>
+                      <span>{calculateReadingTime(post.content)}</span>
+                    </div>
                   </div>
                 </Link>
               ))}
             </div>
 
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-center gap-3 mt-14 font-mono text-xs">
+            {/* Pagination */}
+            <div className="flex items-center justify-center gap-3 mt-12 font-mono text-xs">
               <button
                 onClick={() => {
                   setPage(page - 1);
-                  document.getElementById('articles')?.scrollIntoView({ behavior: 'smooth' });
+                  scrollToArticles();
                 }}
                 disabled={page === 1}
                 className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] rounded-[3px] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -332,7 +295,7 @@ const Home = () => {
               <button
                 onClick={() => {
                   setPage(page + 1);
-                  document.getElementById('articles')?.scrollIntoView({ behavior: 'smooth' });
+                  scrollToArticles();
                 }}
                 disabled={posts.length < pageSize}
                 className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] rounded-[3px] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"

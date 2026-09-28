@@ -17,6 +17,8 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { getImageUrl } from '../../utils/imageUrl';
 import { stripHtmlTags } from '../../utils/textUtils';
 import { Helmet } from 'react-helmet-async';
+import DOMPurify from 'dompurify';
+import '../../styles/tiptap-custom.css';
 
 const PostDetail = () => {
   const { slug } = useParams();
@@ -41,7 +43,6 @@ const PostDetail = () => {
     try {
       setLoading(true);
       const postData = await postService.getPostBySlug(slug);
-      console.log('Post data received:', postData);
       setPost(postData);
       const actualPostId = postData.id || postData.postId;
       if (actualPostId) {
@@ -50,11 +51,7 @@ const PostDetail = () => {
       } else {
         console.error('Post ID not found in response:', postData);
       }
-      await fetchRelatedPosts(
-        postData.categoryId,
-        postData.id || postData.postId,
-        postData.categoryName
-      );
+      await fetchRelatedPosts(postData.categoryId, actualPostId, postData.categoryName);
     } catch (error) {
       console.error('Failed to load post', error);
       toast.error('Failed to load post');
@@ -107,12 +104,10 @@ const PostDetail = () => {
       toast.error('Please login to comment');
       return;
     }
-
     if (!newComment.trim()) {
       toast.error('Comment cannot be empty');
       return;
     }
-
     try {
       setCommentLoading(true);
       await commentService.createComment(post.id, newComment);
@@ -132,7 +127,6 @@ const PostDetail = () => {
       toast.error('Comment cannot be empty');
       return;
     }
-
     try {
       await commentService.updateComment(post.id, commentId, editContent);
       toast.success('Comment updated successfully');
@@ -146,16 +140,14 @@ const PostDetail = () => {
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) {
-      return;
-    }
-
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
     try {
       await commentService.deleteComment(post.id, commentId);
       toast.success('Comment deleted successfully');
       await fetchComments(post.id);
     } catch (error) {
       console.error('Failed to delete comment', error);
+      toast.error('Failed to delete comment');
     }
   };
 
@@ -189,9 +181,7 @@ const PostDetail = () => {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center bg-[var(--color-bg)] text-[var(--color-text)] space-y-4">
         <LoadingSpinner size="large" />
-        <p className="font-mono text-xs text-[var(--color-text-muted)]">
-          Loading article...
-        </p>
+        <p className="font-mono text-xs text-[var(--color-text-muted)]">Loading article...</p>
       </div>
     );
   }
@@ -220,56 +210,28 @@ const PostDetail = () => {
     );
   }
 
-  <Helmet>
-    <title>{post.title} | SharpStack</title>
-
-    <meta
-      name="description"
-      content={
-        stripHtmlTags(post.content)
-          .replace(/\s+/g, ' ')
-          .slice(0, 160)
-      }
-    />
-
-    <link
-      rel="canonical"
-      href={`https://sharpstackbd.onrender.com/post/${post.slug}`}
-    />
-
-    {/* Open Graph */}
-    <meta property="og:type" content="article" />
-    <meta property="og:title" content={`${post.title} | SharpStack`} />
-    <meta
-      property="og:description"
-      content={stripHtmlTags(post.content).replace(/\s+/g, ' ').slice(0, 160)}
-    />
-    <meta
-      property="og:url"
-      content={`https://sharpstackbd.onrender.com/post/${post.slug}`}
-    />
-
-    {images.length > 0 && (
-      <meta
-        property="og:image"
-        content={getImageUrl(images[0].url)}
-      />
-    )}
-
-    <meta
-      property="article:published_time"
-      content={post.createdAt}
-    />
-
-    <meta
-      property="article:section"
-      content={post.categoryName || 'Engineering'}
-    />
-  </Helmet>
-
+  const description = stripHtmlTags(post.content).replace(/\s+/g, ' ').slice(0, 160);
+  const postUrl = `https://sharpstackbd.onrender.com/post/${post.slug}`;
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] transition-colors py-10 sm:py-14">
+      <Helmet>
+        <title>{post.title} | SharpStack</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={postUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={`${post.title} | SharpStack`} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={postUrl} />
+        {images.length > 0 && (
+          <meta property="og:image" content={getImageUrl(images[0].url)} />
+        )}
+        <meta property="article:published_time" content={post.createdAt} />
+        <meta property="article:section" content={post.categoryName || 'Engineering'} />
+      </Helmet>
+
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
         {/* Navigation Breadcrumb */}
         <div className="mb-8">
@@ -278,15 +240,15 @@ const PostDetail = () => {
             className="inline-flex items-center gap-2 font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors group"
           >
             <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" size={13} />
-            <span>← Back to all articles</span>
+            <span>Back to all articles</span>
           </Link>
         </div>
 
         {/* 2-Column Editorial Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
-          {/* Main Reading Column (8 cols) */}
+          {/* Main Reading Column */}
           <article className="lg:col-span-8 min-w-0">
-            {/* Header: Topic, Timestamp, Reading time */}
+            {/* Header */}
             <div className="flex flex-wrap items-center gap-3 font-mono text-xs mb-4">
               <span className="font-semibold tracking-wider text-[var(--color-primary)] uppercase">
                 [ {post.categoryName || 'ENGINEERING'} ]
@@ -302,7 +264,7 @@ const PostDetail = () => {
               </span>
             </div>
 
-            {/* Article Title */}
+            {/* Title */}
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-[44px] font-bold text-[var(--color-text)] tracking-tight leading-[1.18] mb-6">
               {post.title}
             </h1>
@@ -346,25 +308,23 @@ const PostDetail = () => {
               </div>
             </div>
 
-            {/* Featured Image & Gallery */}
+            {/* Featured Image & Gallery (standard size on all devices) */}
             {images.length > 0 && (
-              <div className="mb-10">
-                {/* Main Selected Image */}
-                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[4px] border border-[var(--color-border)] bg-[var(--color-surface-secondary)] shadow-xs">
+              <div className="mb-10 w-full max-w-2xl">
+                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[4px] border border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
                   <img
                     src={selectedImage || getImageUrl(images[0].url)}
                     alt={post.title}
                     className="w-full h-full object-cover transition-opacity duration-300"
+                    loading="lazy"
                     onError={(e) => {
-                      console.error('Image failed to load:', e.target.src);
                       e.target.style.display = 'none';
                     }}
                   />
                 </div>
 
-                {/* Thumbnail Gallery (when multiple images exist) */}
                 {images.length > 1 && (
-                  <div className="flex flex-wrap gap-2.5 mt-3.5">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     {images.map((image) => {
                       const imgUrl = getImageUrl(image.url);
                       const isSelected = selectedImage === imgUrl;
@@ -373,15 +333,17 @@ const PostDetail = () => {
                           key={image.id}
                           type="button"
                           onClick={() => setSelectedImage(imgUrl)}
-                          className={`cursor-pointer rounded-[3px] overflow-hidden border-2 transition-all w-20 h-14 bg-[var(--color-surface-secondary)] ${isSelected
-                            ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20'
-                            : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)] opacity-70 hover:opacity-100'
-                            }`}
+                          className={`cursor-pointer rounded-[3px] overflow-hidden border-2 transition-all w-14 h-10 sm:w-16 sm:h-11 bg-[var(--color-surface-secondary)] ${
+                            isSelected
+                              ? 'border-[var(--color-primary)]'
+                              : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)] opacity-70 hover:opacity-100'
+                          }`}
                         >
                           <img
                             src={imgUrl}
                             alt={image.fileName || 'Gallery thumbnail'}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                           />
                         </button>
                       );
@@ -391,15 +353,15 @@ const PostDetail = () => {
               </div>
             )}
 
-            {/* Article Long-Form Body (Quill) */}
-            <div className="prose max-w-none mb-14 pb-10 border-b border-[var(--color-border)]">
+            {/* Article Body (Tiptap HTML, sanitized) */}
+            <div className="mb-14 pb-10 border-b border-[var(--color-border)]">
               <div
-                className="article-content ql-editor"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                className="post-content"
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
               />
             </div>
 
-            {/* Discussion / Comments Section */}
+            {/* Discussion / Comments */}
             <section className="mt-10">
               <div className="flex items-center justify-between pb-4 mb-8 border-b border-[var(--color-border)]">
                 <div className="flex items-center gap-3">
@@ -412,7 +374,6 @@ const PostDetail = () => {
                 </div>
               </div>
 
-              {/* Add Comment Form or Login Notice */}
               {user ? (
                 <form onSubmit={handleSubmitComment} className="mb-10">
                   <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[4px] p-4 focus-within:border-[var(--color-primary)] transition-colors">
@@ -451,7 +412,6 @@ const PostDetail = () => {
                 </div>
               )}
 
-              {/* Comments List */}
               <div className="space-y-4">
                 {comments.length === 0 ? (
                   <div className="text-center py-10 px-4 border border-[var(--color-border)]/50 rounded-[4px] bg-[var(--color-surface)]/40">
@@ -465,7 +425,6 @@ const PostDetail = () => {
                       key={comment.id}
                       className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[4px] transition-colors"
                     >
-                      {/* Comment Header */}
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-[3px] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-center justify-center font-mono text-xs font-bold text-[var(--color-primary)] uppercase">
@@ -488,7 +447,6 @@ const PostDetail = () => {
                           </div>
                         </div>
 
-                        {/* Comment Actions (Edit / Delete) */}
                         {user && (user.id === comment.userId || isAdmin()) && (
                           <div className="flex items-center gap-1 font-mono text-xs">
                             {user.id === comment.userId && (
@@ -514,7 +472,6 @@ const PostDetail = () => {
                         )}
                       </div>
 
-                      {/* Comment Body or Inline Editor */}
                       {editingComment === comment.id ? (
                         <div className="mt-4 pt-3 border-t border-[var(--color-border)]">
                           <textarea
@@ -558,9 +515,8 @@ const PostDetail = () => {
             </section>
           </article>
 
-          {/* Sidebar (4 cols on lg, sticky on desktop) */}
+          {/* Sidebar */}
           <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
-            {/* Metadata Card */}
             <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[4px] p-5">
               <div className="font-mono text-[11px] font-semibold tracking-wider text-[var(--color-primary)] uppercase mb-3">
                 // ARTICLE INTEL
@@ -574,26 +530,19 @@ const PostDetail = () => {
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border)]/50">
                   <dt className="text-[var(--color-text-muted)]">Read Time</dt>
-                  <dd className="text-[var(--color-text)]">
-                    {calculateReadingTime(post.content)}
-                  </dd>
+                  <dd className="text-[var(--color-text)]">{calculateReadingTime(post.content)}</dd>
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border)]/50">
                   <dt className="text-[var(--color-text-muted)]">Published</dt>
-                  <dd className="text-[var(--color-text)]">
-                    {formatDate(post.createdAt)}
-                  </dd>
+                  <dd className="text-[var(--color-text)]">{formatDate(post.createdAt)}</dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-[var(--color-text-muted)]">Comments</dt>
-                  <dd className="text-[var(--color-text)]">
-                    {comments.length}
-                  </dd>
+                  <dd className="text-[var(--color-text)]">{comments.length}</dd>
                 </div>
               </dl>
             </div>
 
-            {/* Related Topics & Articles */}
             <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[4px] p-5">
               <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--color-border)]">
                 <div className="font-mono text-[11px] font-semibold tracking-wider text-[var(--color-primary)] uppercase">
