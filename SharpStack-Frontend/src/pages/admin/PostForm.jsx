@@ -4,19 +4,15 @@ import postService from '../../services/postService';
 import categoryService from '../../services/categoryService';
 import toast from 'react-hot-toast';
 import {
-  FiSave,
   FiArrowLeft,
-  FiImage,
   FiX,
   FiUploadCloud,
   FiCheck,
   FiStar,
 } from 'react-icons/fi';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import TiptapEditor from '../../components/common/TiptapEditor';
 import { getImageUrl } from '../../utils/imageUrl';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
-import '../../styles/quill-custom.css';
 
 const PostForm = () => {
   const { id } = useParams();
@@ -216,11 +212,13 @@ const PostForm = () => {
       return;
     }
 
+    // Tiptap খালি থাকলে "<p></p>" দেয়, তাই টেক্সট আছে কিনা দেখা হচ্ছে
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = formData.content;
     const textContent = tempDiv.textContent || tempDiv.innerText || '';
+    const hasImage = tempDiv.querySelector('img') !== null;
 
-    if (!textContent.trim()) {
+    if (!textContent.trim() && !hasImage) {
       toast.error('Post Content is required');
       return;
     }
@@ -291,23 +289,6 @@ const PostForm = () => {
     }
   };
 
-  const quillModules = {
-    toolbar: [
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      [{ font: [] }],
-      [{ size: ['small', false, 'large', 'huge'] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ color: [] }, { background: [] }],
-      [{ script: 'sub' }, { script: 'super' }],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      [{ indent: '-1' }, { indent: '+1' }],
-      [{ align: [] }],
-      ['blockquote', 'code-block'],
-      ['link', 'image', 'video'],
-      ['clean'],
-    ],
-  };
-
   if (initialLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-4">
@@ -327,7 +308,7 @@ const PostForm = () => {
           className="inline-flex items-center gap-1.5 font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors mb-3 group"
         >
           <FiArrowLeft className="group-hover:-translate-x-0.5 transition-transform" size={13} />
-          <span>← Back to Posts</span>
+          <span>Back to Posts</span>
         </button>
         <div className="font-mono text-xs font-semibold tracking-widest text-[var(--color-primary)] uppercase mb-2">
           — {isEditMode ? 'EDIT WORKFLOW' : 'AUTHORING'}
@@ -387,28 +368,22 @@ const PostForm = () => {
           </select>
         </div>
 
-        {/* Rich Text Editor */}
-        <div className="quill-editor-wrapper">
-          <label
-            htmlFor="content"
-            className="block font-mono text-xs font-semibold tracking-wider text-[var(--color-text-muted)] uppercase mb-2"
-          >
+        {/* Rich Text Editor (Tiptap) */}
+        <div>
+          <label className="block font-mono text-xs font-semibold tracking-wider text-[var(--color-text-muted)] uppercase mb-2">
             Content <span className="text-[var(--color-primary)]">*</span>
           </label>
 
           <div className="border border-[var(--color-border)] rounded-[4px] overflow-hidden focus-within:border-[var(--color-primary)] bg-[var(--color-surface-secondary)] transition-colors">
-            <ReactQuill
-              theme="snow"
+            <TiptapEditor
               value={formData.content}
               onChange={handleContentChange}
-              modules={quillModules}
               placeholder="Write your article content..."
-              style={{ minHeight: '380px' }}
             />
           </div>
 
           <p className="font-mono text-xs text-[var(--color-text-muted)] mt-2">
-            Markdown formatting, code blocks, lists, and embeds supported.
+            Rich text formatting, code blocks, lists, links and images supported.
           </p>
         </div>
 

@@ -16,8 +16,6 @@ import {
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { getImageUrl } from '../../utils/imageUrl';
 import { stripHtmlTags } from '../../utils/textUtils';
-import 'react-quill-new/dist/quill.snow.css';
-import '../../styles/quill-custom.css';
 import { Helmet } from 'react-helmet-async';
 
 const PostDetail = () => {
