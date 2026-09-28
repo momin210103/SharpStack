@@ -17,6 +17,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import PostManagement from './pages/admin/PostManagement';
 import PostForm from './pages/admin/PostForm';
 import ManageCategory from './pages/admin/ManageCategory';
+import About from './pages/about/About';
 
 function App() {
   return (
@@ -68,6 +69,18 @@ function App() {
               </>
             }
           />
+          <Route
+            path="/about"
+            element={
+              <>
+                <Navbar />
+                <About />
+                <Footer />
+              </>
+            }
+          >
+
+          </Route>
 
           {/* Auth Routes - No Navbar/Footer */}
           <Route path="/login" element={<Login />} />
