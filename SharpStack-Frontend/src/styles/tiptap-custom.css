@@ -80,16 +80,6 @@
   color: var(--color-text);
   line-height: 1.75;
 }
-.post-content {
-  font-size: 1.0625rem; /* 17px, মোবাইল ও ট্যাবলেট */
-  line-height: 1.8;
-}
-
-@media (min-width: 1024px) {
-  .post-content {
-    font-size: 1.125rem; /* 18px, ডেস্কটপ */
-  }
-}
 .tiptap {
   min-height: 380px;
   padding: 16px 20px;
@@ -315,4 +305,47 @@
 .tiptap pre .hljs-punctuation,
 .post-content pre .hljs-punctuation {
   color: #d4d4d8;
+}
+
+/* ================= Tables & horizontal rule ================= */
+.tiptap table,
+.post-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.4em 0;
+  font-size: 0.95em;
+  display: block;
+  overflow-x: auto;
+}
+.tiptap th,
+.tiptap td,
+.post-content th,
+.post-content td {
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  min-width: 90px;
+}
+.tiptap th,
+.post-content th {
+  background: var(--color-surface);
+  font-weight: 600;
+}
+.tiptap tr:nth-child(even) td,
+.post-content tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.02);
+}
+.tiptap td > p,
+.tiptap th > p {
+  margin: 0;
+}
+.tiptap .selectedCell {
+  background: rgba(124, 92, 255, 0.25) !important;
+}
+.tiptap hr,
+.post-content hr {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin: 2em 0;
 }

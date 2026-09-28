@@ -6,6 +6,7 @@ import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import TextAlign from '@tiptap/extension-text-align';
 import Highlight from '@tiptap/extension-highlight';
+import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table';
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { createLowlight, common } from 'lowlight';
 import { TextStyle, Color } from '@tiptap/extension-text-style';
@@ -134,6 +135,22 @@ function Toolbar({ editor }) {
       )}
       <Btn label="Link" title="Link" onClick={addLink} active={editor.isActive('link')} />
       <Btn label="Img" title="Insert image by URL" onClick={addImage} />
+      <Btn
+        label="Table"
+        title="Insert table (3x3)"
+        onClick={() => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+        active={editor.isActive('table')}
+      />
+      <Btn label="―" title="Horizontal line" onClick={() => chain().setHorizontalRule().run()} />
+      {editor.isActive('table') && (
+        <>
+          <Btn label="+Col" title="Add column after" onClick={() => chain().addColumnAfter().run()} />
+          <Btn label="−Col" title="Delete column" onClick={() => chain().deleteColumn().run()} />
+          <Btn label="+Row" title="Add row after" onClick={() => chain().addRowAfter().run()} />
+          <Btn label="−Row" title="Delete row" onClick={() => chain().deleteRow().run()} />
+          <Btn label="Del Table" title="Delete table" onClick={() => chain().deleteTable().run()} />
+        </>
+      )}
       <span className="tt-sep" />
 
       <Btn
@@ -151,6 +168,10 @@ export default function TiptapEditor({ value, onChange, placeholder }) {
       StarterKit.configure({ codeBlock: false, link: { openOnClick: false } }),
       CodeBlockLowlight.configure({ lowlight, defaultLanguage: 'csharp' }),
       Image,
+      Table.configure({ resizable: false }),
+      TableRow,
+      TableHeader,
+      TableCell,
       Subscript,
       Superscript,
       TextStyle,
