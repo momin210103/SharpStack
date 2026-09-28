@@ -6,8 +6,25 @@ import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import TextAlign from '@tiptap/extension-text-align';
 import Highlight from '@tiptap/extension-highlight';
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
+import { createLowlight, common } from 'lowlight';
 import { TextStyle, Color } from '@tiptap/extension-text-style';
 import '../../styles/tiptap-custom.css';
+
+const lowlight = createLowlight(common);
+
+const LANGUAGES = [
+  ['csharp', 'C#'],
+  ['javascript', 'JavaScript'],
+  ['typescript', 'TypeScript'],
+  ['sql', 'SQL'],
+  ['json', 'JSON'],
+  ['bash', 'Bash'],
+  ['xml', 'HTML/XML'],
+  ['css', 'CSS'],
+  ['python', 'Python'],
+  ['plaintext', 'Plain text'],
+];
 
 // NOTE: Tiptap v3 StarterKit-এ Link ও Underline আগে থেকেই আছে।
 // (v2 ব্যবহার করলে @tiptap/extension-link ও @tiptap/extension-underline আলাদা যোগ করতে হবে)
@@ -103,6 +120,18 @@ function Toolbar({ editor }) {
 
       <Btn label="❝" title="Quote" onClick={() => chain().toggleBlockquote().run()} active={editor.isActive('blockquote')} />
       <Btn label="</>" title="Code block" onClick={() => chain().toggleCodeBlock().run()} active={editor.isActive('codeBlock')} />
+      {editor.isActive('codeBlock') && (
+        <select
+          className="tt-select"
+          title="Code language"
+          value={editor.getAttributes('codeBlock').language || 'plaintext'}
+          onChange={(e) => chain().updateAttributes('codeBlock', { language: e.target.value }).run()}
+        >
+          {LANGUAGES.map(([v, l]) => (
+            <option key={v} value={v}>{l}</option>
+          ))}
+        </select>
+      )}
       <Btn label="Link" title="Link" onClick={addLink} active={editor.isActive('link')} />
       <Btn label="Img" title="Insert image by URL" onClick={addImage} />
       <span className="tt-sep" />
@@ -119,7 +148,8 @@ function Toolbar({ editor }) {
 export default function TiptapEditor({ value, onChange, placeholder }) {
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ link: { openOnClick: false } }),
+      StarterKit.configure({ codeBlock: false, link: { openOnClick: false } }),
+      CodeBlockLowlight.configure({ lowlight, defaultLanguage: 'csharp' }),
       Image,
       Subscript,
       Superscript,

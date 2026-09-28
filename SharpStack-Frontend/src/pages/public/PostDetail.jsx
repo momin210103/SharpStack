@@ -17,8 +17,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { getImageUrl } from '../../utils/imageUrl';
 import { stripHtmlTags } from '../../utils/textUtils';
 import { Helmet } from 'react-helmet-async';
-import DOMPurify from 'dompurify';
-import '../../styles/tiptap-custom.css';
+import PostContent from '../../components/common/PostContent';
 
 const PostDetail = () => {
   const { slug } = useParams();
@@ -217,48 +216,23 @@ const PostDetail = () => {
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] transition-colors py-10 sm:py-14">
       <Helmet>
         <title>{post.title} | SharpStack</title>
-
         <meta name="description" content={description} />
-
         <link rel="canonical" href={postUrl} />
 
         {/* Open Graph */}
         <meta property="og:type" content="article" />
-
-        <meta
-          property="og:title"
-          content={`${post.title} | SharpStack`}
-        />
-
-        <meta
-          property="og:description"
-          content={description}
-        />
-
+        <meta property="og:title" content={`${post.title} | SharpStack`} />
+        <meta property="og:description" content={description} />
         <meta property="og:url" content={postUrl} />
-
         {images.length > 0 && (
-          <meta
-            property="og:image"
-            content={getImageUrl(images[0].url)}
-          />
+          <meta property="og:image" content={getImageUrl(images[0].url)} />
         )}
-
-        {/* Article Metadata */}
-        <meta
-          property="article:published_time"
-          content={post.createdAt}
-        />
-
+        <meta property="article:published_time" content={post.createdAt} />
         <meta
           property="article:author"
           content={post.authorName || 'MD. Abdul Momin Sheikh'}
         />
-
-        <meta
-          property="article:section"
-          content={post.categoryName || 'Engineering'}
-        />
+        <meta property="article:section" content={post.categoryName || 'Engineering'} />
       </Helmet>
 
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -363,8 +337,8 @@ const PostDetail = () => {
                           type="button"
                           onClick={() => setSelectedImage(imgUrl)}
                           className={`cursor-pointer rounded-[3px] overflow-hidden border-2 transition-all w-14 h-10 sm:w-16 sm:h-11 bg-[var(--color-surface-secondary)] ${isSelected
-                            ? 'border-[var(--color-primary)]'
-                            : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)] opacity-70 hover:opacity-100'
+                              ? 'border-[var(--color-primary)]'
+                              : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)] opacity-70 hover:opacity-100'
                             }`}
                         >
                           <img
@@ -383,10 +357,7 @@ const PostDetail = () => {
 
             {/* Article Body (Tiptap HTML, sanitized) */}
             <div className="mb-14 pb-10 border-b border-[var(--color-border)]">
-              <div
-                className="post-content"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
-              />
+              <PostContent html={post.content} />
             </div>
 
             {/* Discussion / Comments */}

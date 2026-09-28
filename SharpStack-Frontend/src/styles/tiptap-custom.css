@@ -28,14 +28,19 @@
   border-radius: 3px;
   font-size: 13px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .tt-btn:hover:not(:disabled),
 .tt-color:hover {
   background: var(--color-surface-secondary);
   border-color: var(--color-border);
 }
-.tt-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.tt-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 .tt-btn.is-active {
   background: var(--color-primary);
   color: #fff;
@@ -45,11 +50,28 @@
   border-color: var(--color-border);
   font-family: inherit;
 }
-.tt-select option { background: var(--color-surface); color: var(--color-text); }
-.tt-sep { width: 1px; height: 20px; background: var(--color-border); margin: 0 4px; }
-.tt-color { position: relative; font-weight: 700; text-decoration: underline; }
+.tt-select option {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.tt-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+  margin: 0 4px;
+}
+.tt-color {
+  position: relative;
+  font-weight: 700;
+  text-decoration: underline;
+}
 .tt-color input {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
 }
 
 /* Editor area + rendered post content (same styles) */
@@ -58,26 +80,74 @@
   color: var(--color-text);
   line-height: 1.75;
 }
+.post-content {
+  font-size: 1.0625rem; /* 17px, মোবাইল ও ট্যাবলেট */
+  line-height: 1.8;
+}
+
+@media (min-width: 1024px) {
+  .post-content {
+    font-size: 1.125rem; /* 18px, ডেস্কটপ */
+  }
+}
 .tiptap {
   min-height: 380px;
   padding: 16px 20px;
   outline: none;
 }
-.tiptap p, .post-content p { margin: 0 0 1em; }
-.tiptap h1, .post-content h1 { font-size: 2rem; font-weight: 600; margin: 1.4em 0 0.5em; }
-.tiptap h2, .post-content h2 { font-size: 1.6rem; font-weight: 600; margin: 1.3em 0 0.5em; }
-.tiptap h3, .post-content h3 { font-size: 1.3rem; font-weight: 600; margin: 1.2em 0 0.5em; }
-.tiptap h4, .post-content h4 { font-size: 1.1rem; font-weight: 600; margin: 1.1em 0 0.4em; }
-.tiptap ul, .post-content ul { list-style: disc; padding-left: 1.5em; margin: 0 0 1em; }
-.tiptap ol, .post-content ol { list-style: decimal; padding-left: 1.5em; margin: 0 0 1em; }
-.tiptap li > p, .post-content li > p { margin: 0; }
-.tiptap blockquote, .post-content blockquote {
+.tiptap p,
+.post-content p {
+  margin: 0 0 1em;
+}
+.tiptap h1,
+.post-content h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 1.4em 0 0.5em;
+}
+.tiptap h2,
+.post-content h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 1.3em 0 0.5em;
+}
+.tiptap h3,
+.post-content h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 1.2em 0 0.5em;
+}
+.tiptap h4,
+.post-content h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.1em 0 0.4em;
+}
+.tiptap ul,
+.post-content ul {
+  list-style: disc;
+  padding-left: 1.5em;
+  margin: 0 0 1em;
+}
+.tiptap ol,
+.post-content ol {
+  list-style: decimal;
+  padding-left: 1.5em;
+  margin: 0 0 1em;
+}
+.tiptap li > p,
+.post-content li > p {
+  margin: 0;
+}
+.tiptap blockquote,
+.post-content blockquote {
   border-left: 3px solid var(--color-primary);
   margin: 1em 0;
   padding: 0.2em 0 0.2em 1em;
   color: var(--color-text-muted);
 }
-.tiptap pre, .post-content pre {
+.tiptap pre,
+.post-content pre {
   background: #0c0c10;
   color: #e6e6e6;
   padding: 12px 14px;
@@ -87,16 +157,38 @@
   font-family: ui-monospace, monospace;
   font-size: 0.9rem;
 }
-.tiptap code, .post-content code { font-family: ui-monospace, monospace; }
-.tiptap :not(pre) > code, .post-content :not(pre) > code {
+.tiptap code,
+.post-content code {
+  font-family: ui-monospace, monospace;
+}
+.tiptap :not(pre) > code,
+.post-content :not(pre) > code {
   background: rgba(255, 255, 255, 0.08);
   padding: 0.1em 0.35em;
   border-radius: 3px;
 }
-.tiptap a, .post-content a { color: var(--color-primary); text-decoration: underline; }
-.tiptap img, .post-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 1em 0; }
-.tiptap mark, .post-content mark { background: #fde68a; color: #111; padding: 0 2px; border-radius: 2px; }
-.tiptap img.ProseMirror-selectednode { outline: 2px solid var(--color-primary); }
+.tiptap a,
+.post-content a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+.tiptap img,
+.post-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 1em 0;
+}
+.tiptap mark,
+.post-content mark {
+  background: #fde68a;
+  color: #111;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+.tiptap img.ProseMirror-selectednode {
+  outline: 2px solid var(--color-primary);
+}
 
 /* Placeholder */
 .tiptap p.is-editor-empty:first-child::before {
@@ -105,4 +197,122 @@
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+/* ================= Code blocks ================= */
+.tiptap pre,
+.post-content pre {
+  background: #16161d;
+  color: #d4d4d8;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin: 1.4em 0;
+  overflow-x: auto;
+  font-family:
+    ui-monospace, "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.65;
+  tab-size: 4;
+}
+.tiptap pre code,
+.post-content pre code {
+  background: none !important;
+  padding: 0 !important;
+  font-size: inherit;
+  color: inherit;
+  white-space: pre;
+}
+.code-wrap {
+  position: relative;
+  margin: 1.4em 0;
+}
+.code-wrap pre {
+  margin: 0;
+}
+.code-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  color: #a1a1aa;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  opacity: 0.75;
+  transition:
+    opacity 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+.code-wrap:hover .code-copy {
+  opacity: 1;
+}
+.code-copy:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.code-copy.is-copied {
+  color: #4ade80;
+  border-color: #4ade80;
+}
+
+/* Syntax colors (VS Code Dark+ style) */
+.tiptap pre .hljs-keyword,
+.post-content pre .hljs-keyword,
+.tiptap pre .hljs-literal,
+.post-content pre .hljs-literal,
+.tiptap pre .hljs-built_in,
+.post-content pre .hljs-built_in {
+  color: #569cd6;
+}
+.tiptap pre .hljs-title.class_,
+.post-content pre .hljs-title.class_,
+.tiptap pre .hljs-type,
+.post-content pre .hljs-type {
+  color: #4ec9b0;
+}
+.tiptap pre .hljs-title.function_,
+.post-content pre .hljs-title.function_,
+.tiptap pre .hljs-title,
+.post-content pre .hljs-title {
+  color: #6ee7a0;
+}
+.tiptap pre .hljs-string,
+.post-content pre .hljs-string {
+  color: #ce9178;
+}
+.tiptap pre .hljs-number,
+.post-content pre .hljs-number {
+  color: #b5cea8;
+}
+.tiptap pre .hljs-comment,
+.post-content pre .hljs-comment {
+  color: #6b7a99;
+  font-style: italic;
+}
+.tiptap pre .hljs-attr,
+.post-content pre .hljs-attr,
+.tiptap pre .hljs-attribute,
+.post-content pre .hljs-attribute,
+.tiptap pre .hljs-property,
+.post-content pre .hljs-property {
+  color: #9cdcfe;
+}
+.tiptap pre .hljs-params,
+.post-content pre .hljs-params {
+  color: #9cdcfe;
+}
+.tiptap pre .hljs-tag,
+.post-content pre .hljs-tag,
+.tiptap pre .hljs-name,
+.post-content pre .hljs-name {
+  color: #569cd6;
+}
+.tiptap pre .hljs-punctuation,
+.post-content pre .hljs-punctuation {
+  color: #d4d4d8;
 }
